@@ -10,22 +10,31 @@ interface SignedUploadResponse {
 
 interface CloudinaryUploadResponse {
   secure_url: string;
+  resource_type?: string;
 }
 
-async function uploadImage(
+type UploadAssetType = "image" | "video";
+
+export interface UploadedPostMedia {
+  secureUrl: string;
+  mediaType: UploadAssetType;
+}
+
+async function uploadAsset(
   file: File,
   purpose: "post" | "profile",
+  endpointResource: "image" | "auto",
   onProgress?: (percent: number) => void,
-): Promise<string> {
+): Promise<CloudinaryUploadResponse> {
   const signed = await requestJson<SignedUploadResponse>("/media/sign-upload", {
     method: "POST",
     body: { purpose },
   });
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<CloudinaryUploadResponse>((resolve, reject) => {
     const endpoint = `https://api.cloudinary.com/v1_1/${encodeURIComponent(
       signed.cloud_name,
-    )}/image/upload`;
+    )}/${endpointResource}/upload`;
 
     const formData = new FormData();
     formData.append("file", file);
@@ -46,24 +55,24 @@ async function uploadImage(
     };
 
     xhr.onerror = () => {
-      reject(new Error("Image upload failed"));
+      reject(new Error("Media upload failed"));
     };
 
     xhr.onload = () => {
       if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new Error("Image upload failed"));
+        reject(new Error("Media upload failed"));
         return;
       }
 
       try {
         const payload = JSON.parse(xhr.responseText) as CloudinaryUploadResponse;
         if (!payload.secure_url) {
-          reject(new Error("Image upload failed"));
+          reject(new Error("Media upload failed"));
           return;
         }
-        resolve(payload.secure_url);
+        resolve(payload);
       } catch {
-        reject(new Error("Image upload failed"));
+        reject(new Error("Media upload failed"));
       }
     };
 
@@ -71,16 +80,27 @@ async function uploadImage(
   });
 }
 
-export async function uploadPostImage(
+export async function uploadPostMedia(
   file: File,
+  mediaType: UploadAssetType,
   onProgress?: (percent: number) => void,
-): Promise<string> {
-  return uploadImage(file, "post", onProgress);
+): Promise<UploadedPostMedia> {
+  const payload = await uploadAsset(file, "post", "auto", onProgress);
+  const normalizedType = payload.resource_type?.toLowerCase() === "video" ? "video" : "image";
+  if (normalizedType !== mediaType) {
+    throw new Error("Uploaded media type mismatch. Please try again.");
+  }
+
+  return {
+    secureUrl: payload.secure_url,
+    mediaType: normalizedType,
+  };
 }
 
 export async function uploadProfileImage(
   file: File,
   onProgress?: (percent: number) => void,
 ): Promise<string> {
-  return uploadImage(file, "profile", onProgress);
+  const payload = await uploadAsset(file, "profile", "image", onProgress);
+  return payload.secure_url;
 }

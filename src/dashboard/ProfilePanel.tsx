@@ -355,8 +355,16 @@ export function ProfilePanel({
                 <p>{post.content}</p>
                 {post.image_url ? (
                   <a href={post.image_url} rel="noreferrer" target="_blank">
-                    View image
+                    <img alt="Post attachment" className="content-image" src={post.image_url} />
                   </a>
+                ) : null}
+                {post.video_url ? (
+                  <video
+                    className="content-video"
+                    controls
+                    preload="metadata"
+                    src={post.video_url}
+                  />
                 ) : null}
               </article>
             ))}
@@ -378,8 +386,16 @@ export function ProfilePanel({
                     <p>{post.content}</p>
                     {post.image_url ? (
                       <a href={post.image_url} rel="noreferrer" target="_blank">
-                        View image
+                        <img alt="Saved post attachment" className="content-image" src={post.image_url} />
                       </a>
+                    ) : null}
+                    {post.video_url ? (
+                      <video
+                        className="content-video"
+                        controls
+                        preload="metadata"
+                        src={post.video_url}
+                      />
                     ) : null}
                   </article>
                 ))}

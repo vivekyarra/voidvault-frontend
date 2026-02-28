@@ -137,6 +137,22 @@
   gap: 0.6rem;
 }
 
+.admin-tabs {
+  display: inline-flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.admin-tabs button {
+  min-width: 5.8rem;
+}
+
+.admin-tabs button.active {
+  background: #eceff3;
+  border-color: #eceff3;
+  color: #101419;
+}
+
 .admin-stat-card {
   border: 1px solid #2a2a2a;
   border-radius: 12px;

@@ -20,6 +20,7 @@ export interface FeedPost {
   channel: string;
   content: string;
   image_url: string | null;
+  video_url: string | null;
   image_blurhash: string | null;
   created_at: string;
   expires_at: string;
@@ -54,6 +55,7 @@ export interface SearchPost {
   channel: string;
   content: string;
   image_url: string | null;
+  video_url: string | null;
   created_at: string;
 }
 
@@ -140,6 +142,7 @@ export interface ProfilePost {
   channel: string;
   content: string;
   image_url: string | null;
+  video_url: string | null;
   image_blurhash: string | null;
   created_at: string;
   expires_at: string;

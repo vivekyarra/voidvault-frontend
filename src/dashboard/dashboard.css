@@ -426,6 +426,15 @@
   border: 1px solid #2a2a2a;
 }
 
+.content-video {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  border-radius: 12px;
+  border: 1px solid #2a2a2a;
+  background: #000;
+}
+
 .inline-link {
   border: 0;
   background: transparent;

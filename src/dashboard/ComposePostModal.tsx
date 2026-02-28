@@ -1,7 +1,17 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { requestJson } from "../api";
 import { ImageIcon, XIcon } from "./icons";
-import { uploadPostImage } from "./mediaUpload";
+import { uploadPostMedia } from "./mediaUpload";
+
+type PostMediaType = "image" | "video";
+
+const MAX_POST_IMAGE_BYTES = 12 * 1024 * 1024;
+const MAX_POST_VIDEO_BYTES = 75 * 1024 * 1024;
+
+interface UploadedMediaState {
+  url: string;
+  type: PostMediaType;
+}
 
 export function ComposePostModal({
   isOpen,
@@ -17,8 +27,9 @@ export function ComposePostModal({
   const [content, setContent] = useState("");
   const [uploadStatus, setUploadStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
+  const [mediaPreviewType, setMediaPreviewType] = useState<PostMediaType | null>(null);
+  const [uploadedMedia, setUploadedMedia] = useState<UploadedMediaState | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [status, setStatus] = useState("");
@@ -38,16 +49,38 @@ export function ComposePostModal({
     return () => window.removeEventListener("keydown", onEscape);
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    return () => {
+      if (mediaPreviewUrl) {
+        URL.revokeObjectURL(mediaPreviewUrl);
+      }
+    };
+  }, [mediaPreviewUrl]);
+
   function resetState() {
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
     setChannel("general");
     setContent("");
     setUploadStatus("");
     setUploadProgress(0);
-    setImagePreviewUrl(null);
-    setUploadedImageUrl(null);
+    setMediaPreviewUrl(null);
+    setMediaPreviewType(null);
+    setUploadedMedia(null);
     setIsUploading(false);
     setIsPosting(false);
     setStatus("");
+  }
+
+  function detectMediaType(file: File): PostMediaType | null {
+    if (file.type.startsWith("image/")) {
+      return "image";
+    }
+    if (file.type.startsWith("video/")) {
+      return "video";
+    }
+    return null;
   }
 
   async function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
@@ -56,30 +89,61 @@ export function ComposePostModal({
       return;
     }
 
+    const mediaType = detectMediaType(file);
+    if (!mediaType) {
+      setUploadStatus("Only image and video files are supported.");
+      event.target.value = "";
+      return;
+    }
+
+    const maxBytes = mediaType === "video" ? MAX_POST_VIDEO_BYTES : MAX_POST_IMAGE_BYTES;
+    if (file.size > maxBytes) {
+      setUploadStatus(
+        mediaType === "video"
+          ? "Video must be 75MB or smaller."
+          : "Image must be 12MB or smaller.",
+      );
+      event.target.value = "";
+      return;
+    }
+
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
+
     const localPreview = URL.createObjectURL(file);
-    setImagePreviewUrl(localPreview);
-    setUploadedImageUrl(null);
-    setUploadStatus("Uploading image...");
+    setMediaPreviewUrl(localPreview);
+    setMediaPreviewType(mediaType);
+    setUploadedMedia(null);
+    setUploadStatus(mediaType === "video" ? "Uploading video..." : "Uploading image...");
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
-      const uploadedUrl = await uploadPostImage(file, setUploadProgress);
-      setUploadedImageUrl(uploadedUrl);
-      setUploadStatus("Image upload completed.");
+      const uploaded = await uploadPostMedia(file, mediaType, setUploadProgress);
+      setUploadedMedia({
+        url: uploaded.secureUrl,
+        type: uploaded.mediaType,
+      });
+      setUploadStatus(
+        uploaded.mediaType === "video"
+          ? "Video upload completed."
+          : "Image upload completed.",
+      );
       setUploadProgress(100);
     } catch (error) {
-      setUploadStatus(error instanceof Error ? error.message : "Image upload failed");
-      setUploadedImageUrl(null);
+      setUploadStatus(error instanceof Error ? error.message : "Media upload failed");
+      setUploadedMedia(null);
     } finally {
       setIsUploading(false);
+      event.target.value = "";
     }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isUploading) {
-      setStatus("Please wait for image upload to finish.");
+      setStatus("Please wait for media upload to finish.");
       return;
     }
 
@@ -92,8 +156,10 @@ export function ComposePostModal({
         content,
       };
 
-      if (uploadedImageUrl) {
-        payload.image_url = uploadedImageUrl;
+      if (uploadedMedia?.type === "image") {
+        payload.image_url = uploadedMedia.url;
+      } else if (uploadedMedia?.type === "video") {
+        payload.video_url = uploadedMedia.url;
       }
 
       await requestJson<{ post: { id: string } }>("/post", {
@@ -150,7 +216,7 @@ export function ComposePostModal({
 
           <div className="composer-toolbar">
             <button
-              aria-label="Attach image"
+              aria-label="Attach media"
               className="icon-only-btn"
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -158,7 +224,7 @@ export function ComposePostModal({
               <ImageIcon />
             </button>
             <input
-              accept="image/*"
+              accept="image/*,video/*"
               hidden
               ref={fileInputRef}
               type="file"
@@ -170,13 +236,19 @@ export function ComposePostModal({
           </div>
         </form>
 
-        {imagePreviewUrl ? (
-          <img alt="Selected preview" className="content-image" src={imagePreviewUrl} />
+        {mediaPreviewUrl && mediaPreviewType === "image" ? (
+          <img alt="Selected preview" className="content-image" src={mediaPreviewUrl} />
+        ) : null}
+        {mediaPreviewUrl && mediaPreviewType === "video" ? (
+          <video
+            className="content-video"
+            controls
+            preload="metadata"
+            src={mediaPreviewUrl}
+          />
         ) : null}
 
-        {isUploading ? (
-          <p className="panel-status">Uploading image: {uploadProgress}%</p>
-        ) : null}
+        {isUploading ? <p className="panel-status">Uploading media: {uploadProgress}%</p> : null}
         {uploadStatus ? <p className="panel-status">{uploadStatus}</p> : null}
         {status ? <p className="panel-status">{status}</p> : null}
       </section>

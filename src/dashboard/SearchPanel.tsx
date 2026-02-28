@@ -117,6 +117,17 @@ export function SearchPanel({
                   <time dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
                 </header>
                 <p>{post.content}</p>
+                {post.image_url ? (
+                  <img alt="Post attachment" className="content-image" src={post.image_url} />
+                ) : null}
+                {post.video_url ? (
+                  <video
+                    className="content-video"
+                    controls
+                    preload="metadata"
+                    src={post.video_url}
+                  />
+                ) : null}
               </article>
             ))}
           </div>

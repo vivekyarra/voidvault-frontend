@@ -313,6 +313,14 @@ export function HomePanel({
                 <img alt="Post attachment" className="content-image" src={post.image_url} />
               </a>
             ) : null}
+            {post.video_url ? (
+              <video
+                className="content-video"
+                controls
+                preload="metadata"
+                src={post.video_url}
+              />
+            ) : null}
 
             <footer className="post-actions">
               <button

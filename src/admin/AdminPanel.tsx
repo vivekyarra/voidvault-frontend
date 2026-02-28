@@ -21,6 +21,7 @@ interface AdminOverviewResponse {
 interface AdminUser {
   id: string;
   username: string;
+  recovery_key_hash: string;
   created_at: string;
   trust_score: number;
   is_active: boolean;
@@ -40,6 +41,7 @@ interface AdminPost {
   channel: string;
   content: string;
   image_url: string | null;
+  video_url: string | null;
   created_at: string;
   expires_at: string;
   hidden: boolean;
@@ -63,6 +65,8 @@ interface AdminReportsResponse {
   reports: AdminReport[];
 }
 
+type AdminSection = "users" | "posts" | "reports";
+
 function formatDateTime(value: string): string {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) {
@@ -81,6 +85,12 @@ export function AdminPanel({
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<AdminSection>("users");
+  const [loadedSections, setLoadedSections] = useState<Record<AdminSection, boolean>>({
+    users: false,
+    posts: false,
+    reports: false,
+  });
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [posts, setPosts] = useState<AdminPost[]>([]);
@@ -121,6 +131,7 @@ export function AdminPanel({
       { method: "GET" },
     );
     setUsers(response.users);
+    setLoadedSections((previous) => ({ ...previous, users: true }));
   }, [adminRequest, userQuery]);
 
   const loadPosts = useCallback(async () => {
@@ -135,6 +146,7 @@ export function AdminPanel({
       { method: "GET" },
     );
     setPosts(response.posts);
+    setLoadedSections((previous) => ({ ...previous, posts: true }));
   }, [adminRequest, postQuery]);
 
   const loadReports = useCallback(async () => {
@@ -142,26 +154,51 @@ export function AdminPanel({
       method: "GET",
     });
     setReports(response.reports);
+    setLoadedSections((previous) => ({ ...previous, reports: true }));
   }, [adminRequest]);
 
-  const refreshAll = useCallback(async () => {
+  const loadActiveSection = useCallback(async () => {
+    if (activeSection === "users") {
+      await loadUsers();
+      return;
+    }
+    if (activeSection === "posts") {
+      await loadPosts();
+      return;
+    }
+    await loadReports();
+  }, [activeSection, loadPosts, loadReports, loadUsers]);
+
+  const refreshCurrentView = useCallback(async () => {
     setStatus("");
     setIsLoading(true);
     try {
-      await Promise.all([loadOverview(), loadUsers(), loadPosts(), loadReports()]);
+      await Promise.all([loadOverview(), loadActiveSection()]);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to load admin data");
     } finally {
       setIsLoading(false);
     }
-  }, [loadOverview, loadPosts, loadReports, loadUsers]);
+  }, [loadActiveSection, loadOverview]);
 
   useEffect(() => {
     if (!adminSecret) {
       return;
     }
-    void refreshAll();
-  }, [adminSecret, refreshAll]);
+    void refreshCurrentView();
+  }, [adminSecret, refreshCurrentView]);
+
+  useEffect(() => {
+    if (!adminSecret || loadedSections[activeSection]) {
+      return;
+    }
+    setIsLoading(true);
+    void loadActiveSection()
+      .catch((error: unknown) => {
+        setStatus(error instanceof Error ? error.message : "Failed to load admin data");
+      })
+      .finally(() => setIsLoading(false));
+  }, [activeSection, adminSecret, loadActiveSection, loadedSections]);
 
   const statsCards = useMemo(
     () => [
@@ -213,7 +250,14 @@ export function AdminPanel({
         method: "DELETE",
         body: { user_id: userId },
       });
-      await Promise.all([loadUsers(), loadOverview(), loadPosts(), loadReports()]);
+      const refreshTasks: Array<Promise<unknown>> = [loadUsers(), loadOverview()];
+      if (loadedSections.posts) {
+        refreshTasks.push(loadPosts());
+      }
+      if (loadedSections.reports) {
+        refreshTasks.push(loadReports());
+      }
+      await Promise.all(refreshTasks);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to delete user");
     } finally {
@@ -238,7 +282,7 @@ export function AdminPanel({
   }
 
   async function handleDeletePost(postId: string) {
-    if (!window.confirm("Delete this post? This will replace content with removed text.")) {
+    if (!window.confirm("Delete this post permanently?")) {
       return;
     }
 
@@ -249,7 +293,11 @@ export function AdminPanel({
         method: "POST",
         body: { post_id: postId },
       });
-      await Promise.all([loadPosts(), loadOverview(), loadReports()]);
+      const refreshTasks: Array<Promise<unknown>> = [loadPosts(), loadOverview()];
+      if (loadedSections.reports) {
+        refreshTasks.push(loadReports());
+      }
+      await Promise.all(refreshTasks);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to delete post");
     } finally {
@@ -314,7 +362,7 @@ export function AdminPanel({
           </div>
         </div>
         <div className="admin-topbar-actions">
-          <button type="button" onClick={() => void refreshAll()}>
+          <button type="button" onClick={() => void refreshCurrentView()}>
             {isLoading ? "Refreshing..." : "Refresh"}
           </button>
           <button
@@ -323,6 +371,11 @@ export function AdminPanel({
             onClick={() => {
               setAdminSecret(null);
               setTypedPassword("");
+              setLoadedSections({
+                users: false,
+                posts: false,
+                reports: false,
+              });
             }}
           >
             Lock
@@ -344,186 +397,220 @@ export function AdminPanel({
         ))}
       </section>
 
-      <section className="admin-section">
-        <header className="admin-section-header">
-          <h2>Users</h2>
-          <form
-            className="admin-inline-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void loadUsers();
-            }}
-          >
-            <input
-              placeholder="Search username"
-              value={userQuery}
-              onChange={(event) => setUserQuery(event.target.value)}
-            />
-            <button type="submit">Search</button>
-          </form>
-        </header>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Trust</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    <strong>@{user.username}</strong>
-                    <div className="admin-muted">{user.id}</div>
-                  </td>
-                  <td>{user.trust_score}</td>
-                  <td>
-                    {user.is_banned
-                      ? "Banned"
-                      : user.is_shadow_banned
-                        ? "Shadow banned"
-                        : user.is_active
-                          ? "Active"
-                          : "Inactive"}
-                  </td>
-                  <td>{formatDateTime(user.created_at)}</td>
-                  <td>
-                    <div className="admin-actions">
-                      <button
-                        disabled={Boolean(busyKey)}
-                        type="button"
-                        onClick={() =>
-                          void handleModeration(user.id, { is_banned: !user.is_banned })
-                        }
-                      >
-                        {user.is_banned ? "Unban" : "Ban"}
-                      </button>
-                      <button
-                        disabled={Boolean(busyKey)}
-                        type="button"
-                        onClick={() =>
-                          void handleModeration(user.id, {
-                            is_shadow_banned: !user.is_shadow_banned,
-                          })
-                        }
-                      >
-                        {user.is_shadow_banned ? "Unshadow" : "Shadow ban"}
-                      </button>
-                      <button
-                        className="danger"
-                        disabled={Boolean(busyKey)}
-                        type="button"
-                        onClick={() => void handleDeleteUser(user.id)}
-                      >
-                        {busyKey === `user-delete:${user.id}` ? "Deleting..." : "Delete user"}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <nav aria-label="Admin sections" className="admin-tabs">
+        <button
+          className={activeSection === "users" ? "active" : ""}
+          type="button"
+          onClick={() => setActiveSection("users")}
+        >
+          Users
+        </button>
+        <button
+          className={activeSection === "posts" ? "active" : ""}
+          type="button"
+          onClick={() => setActiveSection("posts")}
+        >
+          Posts
+        </button>
+        <button
+          className={activeSection === "reports" ? "active" : ""}
+          type="button"
+          onClick={() => setActiveSection("reports")}
+        >
+          Reports
+        </button>
+      </nav>
 
-      <section className="admin-section">
-        <header className="admin-section-header">
-          <h2>Posts</h2>
-          <form
-            className="admin-inline-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void loadPosts();
-            }}
-          >
-            <input
-              placeholder="Search post content"
-              value={postQuery}
-              onChange={(event) => setPostQuery(event.target.value)}
-            />
-            <button type="submit">Search</button>
-          </form>
-        </header>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Post</th>
-                <th>Reports</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posts.map((post) => (
-                <tr key={post.id}>
-                  <td>
-                    <div className="admin-post-text">{post.content}</div>
-                    <div className="admin-muted">
-                      @{post.user_id} | #{post.channel}
-                    </div>
-                  </td>
-                  <td>{post.report_count}</td>
-                  <td>{post.hidden ? "Hidden" : "Visible"}</td>
-                  <td>{formatDateTime(post.created_at)}</td>
-                  <td>
-                    <div className="admin-actions">
-                      <button
-                        disabled={Boolean(busyKey)}
-                        type="button"
-                        onClick={() => void handleHidePost(post.id, !post.hidden)}
-                      >
-                        {post.hidden ? "Unhide" : "Hide"}
-                      </button>
-                      <button
-                        className="danger"
-                        disabled={Boolean(busyKey)}
-                        type="button"
-                        onClick={() => void handleDeletePost(post.id)}
-                      >
-                        {busyKey === `post-delete:${post.id}` ? "Deleting..." : "Delete post"}
-                      </button>
-                    </div>
-                  </td>
+      {activeSection === "users" ? (
+        <section className="admin-section">
+          <header className="admin-section-header">
+            <h2>Users</h2>
+            <form
+              className="admin-inline-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void loadUsers();
+              }}
+            >
+              <input
+                placeholder="Search username"
+                value={userQuery}
+                onChange={(event) => setUserQuery(event.target.value)}
+              />
+              <button type="submit">Search</button>
+            </form>
+          </header>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Trust</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td>
+                      <strong>@{user.username}</strong>
+                      <div className="admin-muted">User ID: {user.id}</div>
+                      <div className="admin-muted">Recovery hash: {user.recovery_key_hash}</div>
+                    </td>
+                    <td>{user.trust_score}</td>
+                    <td>
+                      {user.is_banned
+                        ? "Banned"
+                        : user.is_shadow_banned
+                          ? "Shadow banned"
+                          : user.is_active
+                            ? "Active"
+                            : "Inactive"}
+                    </td>
+                    <td>{formatDateTime(user.created_at)}</td>
+                    <td>
+                      <div className="admin-actions">
+                        <button
+                          disabled={Boolean(busyKey)}
+                          type="button"
+                          onClick={() =>
+                            void handleModeration(user.id, { is_banned: !user.is_banned })
+                          }
+                        >
+                          {user.is_banned ? "Unban" : "Ban"}
+                        </button>
+                        <button
+                          disabled={Boolean(busyKey)}
+                          type="button"
+                          onClick={() =>
+                            void handleModeration(user.id, {
+                              is_shadow_banned: !user.is_shadow_banned,
+                            })
+                          }
+                        >
+                          {user.is_shadow_banned ? "Unshadow" : "Shadow ban"}
+                        </button>
+                        <button
+                          className="danger"
+                          disabled={Boolean(busyKey)}
+                          type="button"
+                          onClick={() => void handleDeleteUser(user.id)}
+                        >
+                          {busyKey === `user-delete:${user.id}` ? "Deleting..." : "Delete user"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
 
-      <section className="admin-section">
-        <header className="admin-section-header">
-          <h2>Reports</h2>
-        </header>
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Content ID</th>
-                <th>Reporter</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((report) => (
-                <tr key={report.id}>
-                  <td>{report.content_type}</td>
-                  <td>{report.content_id}</td>
-                  <td>{report.reporter_id ?? "anonymous"}</td>
-                  <td>{formatDateTime(report.created_at)}</td>
+      {activeSection === "posts" ? (
+        <section className="admin-section">
+          <header className="admin-section-header">
+            <h2>Posts</h2>
+            <form
+              className="admin-inline-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void loadPosts();
+              }}
+            >
+              <input
+                placeholder="Search post content"
+                value={postQuery}
+                onChange={(event) => setPostQuery(event.target.value)}
+              />
+              <button type="submit">Search</button>
+            </form>
+          </header>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Post</th>
+                  <th>Reports</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </thead>
+              <tbody>
+                {posts.map((post) => (
+                  <tr key={post.id}>
+                    <td>
+                      <div className="admin-post-text">{post.content}</div>
+                      <div className="admin-muted">
+                        @{post.user_id} | #{post.channel}
+                      </div>
+                      <div className="admin-muted">
+                        {post.video_url ? "Media: video" : post.image_url ? "Media: image" : "Media: text only"}
+                      </div>
+                    </td>
+                    <td>{post.report_count}</td>
+                    <td>{post.hidden ? "Hidden" : "Visible"}</td>
+                    <td>{formatDateTime(post.created_at)}</td>
+                    <td>
+                      <div className="admin-actions">
+                        <button
+                          disabled={Boolean(busyKey)}
+                          type="button"
+                          onClick={() => void handleHidePost(post.id, !post.hidden)}
+                        >
+                          {post.hidden ? "Unhide" : "Hide"}
+                        </button>
+                        <button
+                          className="danger"
+                          disabled={Boolean(busyKey)}
+                          type="button"
+                          onClick={() => void handleDeletePost(post.id)}
+                        >
+                          {busyKey === `post-delete:${post.id}` ? "Deleting..." : "Delete post"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
+      {activeSection === "reports" ? (
+        <section className="admin-section">
+          <header className="admin-section-header">
+            <h2>Reports</h2>
+          </header>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Content ID</th>
+                  <th>Reporter</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((report) => (
+                  <tr key={report.id}>
+                    <td>{report.content_type}</td>
+                    <td>{report.content_id}</td>
+                    <td>{report.reporter_id ?? "anonymous"}</td>
+                    <td>{formatDateTime(report.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }
