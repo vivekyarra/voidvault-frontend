@@ -55,10 +55,6 @@ export function SearchPanel({
 
   return (
     <section className="dashboard-panel">
-      <header className="panel-header">
-        <h2>Search</h2>
-      </header>
-
       <form className="search-form" onSubmit={handleSubmit}>
         <input
           placeholder="Search users and posts"

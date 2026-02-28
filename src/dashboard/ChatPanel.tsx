@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { requestJson } from "../api";
 import type {
   ChatConversation,
@@ -7,6 +7,7 @@ import type {
   ChatMessagesResponse,
   CurrentUser,
 } from "./types";
+import { ArrowLeftIcon } from "./icons";
 import { formatDateTime } from "./shared";
 
 export function ChatPanel({
@@ -27,8 +28,10 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
 
-  async function loadConversations() {
+  const loadConversations = useCallback(async () => {
     setStatus("");
     setIsLoading(true);
     try {
@@ -36,29 +39,40 @@ export function ChatPanel({
         method: "GET",
       });
       setConversations(response.conversations);
-      if (!activeConversationId && response.conversations.length > 0) {
-        setActiveConversationId(response.conversations[0].conversation_id);
-      }
+      setActiveConversationId((previous) =>
+        previous ?? response.conversations[0]?.conversation_id ?? null,
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to load chats");
     } finally {
       setIsLoading(false);
     }
-  }
+  }, []);
 
-  async function loadMessages(conversationId: string, before: string | null, append: boolean) {
-    const query = before ? `?before=${encodeURIComponent(before)}` : "";
-    const response = await requestJson<ChatMessagesResponse>(
-      `/chat/${conversationId}/messages${query}`,
-      { method: "GET" },
-    );
-    const fetched = [...response.messages].reverse();
-    setMessages((previous) => (append ? [...fetched, ...previous] : fetched));
-    setMessagesNextCursor(response.nextCursor);
-  }
+  const loadMessages = useCallback(
+    async (conversationId: string, before: string | null, append: boolean) => {
+      const query = before ? `?before=${encodeURIComponent(before)}` : "";
+      const response = await requestJson<ChatMessagesResponse>(
+        `/chat/${conversationId}/messages${query}`,
+        { method: "GET" },
+      );
+      const fetched = [...response.messages].reverse();
+      setMessages((previous) => (append ? [...fetched, ...previous] : fetched));
+      setMessagesNextCursor(response.nextCursor);
+    },
+    [],
+  );
 
   useEffect(() => {
     void loadConversations();
+  }, [loadConversations]);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 980px)");
+    const apply = () => setIsMobileView(query.matches);
+    apply();
+    query.addEventListener("change", apply);
+    return () => query.removeEventListener("change", apply);
   }, []);
 
   useEffect(() => {
@@ -70,7 +84,7 @@ export function ChatPanel({
     void loadMessages(activeConversationId, null, false).catch((error: unknown) => {
       setStatus(error instanceof Error ? error.message : "Failed to load messages");
     });
-  }, [activeConversationId]);
+  }, [activeConversationId, loadMessages]);
 
   useEffect(() => {
     async function handleTarget() {
@@ -84,6 +98,7 @@ export function ChatPanel({
         });
         await loadConversations();
         setActiveConversationId(response.conversation_id);
+        setMobileThreadOpen(true);
       } catch (error) {
         setStatus(error instanceof Error ? error.message : "Failed to open chat");
       } finally {
@@ -91,7 +106,7 @@ export function ChatPanel({
       }
     }
     void handleTarget();
-  }, [chatTargetUserId]);
+  }, [chatTargetUserId, loadConversations, onChatTargetHandled]);
 
   async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -117,6 +132,9 @@ export function ChatPanel({
     [conversations, activeConversationId],
   );
 
+  const showConversationList = !isMobileView || !mobileThreadOpen;
+  const showConversationThread = !isMobileView || mobileThreadOpen;
+
   return (
     <section className="dashboard-panel chat-layout">
       <header className="panel-header">
@@ -127,6 +145,7 @@ export function ChatPanel({
       {isLoading ? <p className="empty-state">Loading chats...</p> : null}
 
       <div className="chat-grid">
+        {showConversationList ? (
         <aside className="chat-list">
           {conversations.length === 0 ? <p className="empty-state">No chats yet.</p> : null}
           {conversations.map((conversation) => (
@@ -136,7 +155,12 @@ export function ChatPanel({
                 activeConversationId === conversation.conversation_id ? "active" : ""
               }`}
               type="button"
-              onClick={() => setActiveConversationId(conversation.conversation_id)}
+              onClick={() => {
+                setActiveConversationId(conversation.conversation_id);
+                if (isMobileView) {
+                  setMobileThreadOpen(true);
+                }
+              }}
             >
               <strong>@{conversation.other_user?.username ?? "unknown"}</strong>
               <span>{conversation.last_message?.content ?? "No messages yet."}</span>
@@ -144,13 +168,25 @@ export function ChatPanel({
             </button>
           ))}
         </aside>
+        ) : null}
 
+        {showConversationThread ? (
         <section className="chat-thread">
           {!activeConversation ? (
             <p className="empty-state">Select a conversation to start chatting.</p>
           ) : (
             <>
               <header className="chat-thread-header">
+                {isMobileView ? (
+                  <button
+                    aria-label="Back to chats"
+                    className="chat-back-btn"
+                    type="button"
+                    onClick={() => setMobileThreadOpen(false)}
+                  >
+                    <ArrowLeftIcon />
+                  </button>
+                ) : null}
                 <button
                   className="inline-link"
                   type="button"
@@ -204,6 +240,7 @@ export function ChatPanel({
             </>
           )}
         </section>
+        ) : null}
       </div>
     </section>
   );

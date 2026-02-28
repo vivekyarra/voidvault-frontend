@@ -122,6 +122,12 @@
   padding: 0.74rem 1rem;
 }
 
+.secondary-inline-btn {
+  background: #0f151d !important;
+  border: 1px solid #2f3d4a !important;
+  color: #d9e4ef !important;
+}
+
 .auth-form button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -278,13 +284,15 @@
 @media (max-width: 980px) {
   .auth-layout {
     grid-template-columns: 1fr;
-    padding-top: 1.3rem;
-    gap: 1.4rem;
+    width: min(100%, 100vw);
+    padding: 1rem 0.9rem 1.25rem;
+    gap: 1rem;
   }
 
   .brand-panel {
     order: 2;
-    margin-top: 0.8rem;
+    margin-top: 0.5rem;
+    gap: 0.6rem;
   }
 
   .form-panel {
@@ -293,5 +301,58 @@
 
   .vault-logo {
     font-size: clamp(5rem, 22vw, 8rem);
+    transform: none;
+  }
+
+  .auth-form,
+  .agreement-text,
+  .toggle-mode,
+  .recovery-box {
+    max-width: 100%;
+  }
+
+  .site-footer {
+    padding: 0.85rem 0.7rem calc(1rem + env(safe-area-inset-bottom));
+    gap: 0.5rem;
+    font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-layout {
+    padding: 0.8rem 0.75rem 1rem;
+  }
+
+  .form-panel h1 {
+    font-size: 2.35rem;
+  }
+
+  .form-panel h2 {
+    font-size: 1.75rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .auth-form {
+    gap: 0.55rem;
+  }
+
+  .auth-page input,
+  .auth-form button,
+  .secondary-inline-btn,
+  .toggle-mode,
+  .recovery-box button {
+    font-size: 16px;
+  }
+
+  .brand-subline {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    max-width: 100%;
+  }
+
+  .site-footer {
+    justify-content: flex-start;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 }

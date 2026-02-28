@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# VoidVault Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Production React frontend for VoidVault, deployed on Cloudflare Pages.
 
-Currently, two official plugins are available:
+## Stack
+- React 19 + TypeScript
+- Vite
+- Cookie-based API session model (`credentials: include`)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Architecture
+Browser -> Frontend (Pages) -> Drift Backend (Workers) -> Supabase + Cloudinary
 
-## React Compiler
+Frontend does not use Supabase auth directly.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
+- Signup/login with recovery-key flow
+- Mobile-first dashboard UI
+- Trending/following feed
+- Search, follow, notifications, chat, profile, advice
+- Post composer with media URL pipeline support
+- Theme toggle and auth/session guard behavior
+- Admin route at `/admin` with moderation tools
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Environment
+Create `frontend/.env`:
+```env
+VITE_API_URL=https://drift-backend.vivekyarra567.workers.dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Local Development
+```bash
+cd frontend
+npm install
+npm run dev
 ```
+
+## Validation
+```bash
+npm run lint
+npm run build
+```
+
+## Deploy to Cloudflare Pages
+```bash
+cd frontend
+npm run build
+npx wrangler pages deploy dist --project-name voidvault --branch main --commit-dirty=true
+```
+
+Production domain:
+- `https://voidvault.pages.dev`
+
+## Important Integration Notes
+- API calls use `credentials: include`
+- CSRF header is attached from cookie for mutating requests
+- Session token fallback is handled for cross-browser compatibility
+
+## Repository
+- GitHub: https://github.com/vivekyarra/voidvault-frontend

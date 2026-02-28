@@ -1,15 +1,35 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { requestJson } from "./api";
+import { persistSessionToken, requestJson } from "./api";
+import { AdminPanel } from "./admin/AdminPanel";
 import { Dashboard } from "./dashboard/Dashboard";
 import type { CurrentUser } from "./dashboard/types";
 import { PrivacyPage, TermsPage } from "./legalPages";
 import "./App.css";
 
 type AuthMode = "signup" | "login";
-type RoutePath = "/" | "/terms" | "/privacy";
+type RoutePath = "/" | "/terms" | "/privacy" | "/admin";
 
 interface RegisterResponse {
   recovery_key: string;
+  session_token?: string;
+}
+
+interface UsernameSuggestResponse {
+  username: string;
+}
+
+interface LoginResponse {
+  success: boolean;
+  session_token?: string;
+}
+
+function getFocusedPostIdFromQuery(): string | null {
+  const value = new URLSearchParams(window.location.search).get("post");
+  if (!value) {
+    return null;
+  }
+
+  return /^[0-9a-fA-F-]{36}$/.test(value) ? value : null;
 }
 
 function getRoutePath(): RoutePath {
@@ -19,6 +39,9 @@ function getRoutePath(): RoutePath {
   }
   if (pathname === "/privacy") {
     return "/privacy";
+  }
+  if (pathname === "/admin") {
+    return "/admin";
   }
   return "/";
 }
@@ -38,10 +61,16 @@ export default function App() {
   const [status, setStatus] = useState("");
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isGeneratingUsername, setIsGeneratingUsername] = useState(false);
+  const [focusedPostId, setFocusedPostId] = useState<string | null>(
+    getFocusedPostIdFromQuery(),
+  );
 
   useEffect(() => {
     const handlePopState = () => {
       setRoutePath(getRoutePath());
+      setFocusedPostId(getFocusedPostIdFromQuery());
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -53,9 +82,11 @@ export default function App() {
       try {
         const me = await requestJson<CurrentUser>("/me", { method: "GET" });
         setCurrentUser(me);
-        setUsername((previous) => previous || me.username);
       } catch {
+        persistSessionToken(null);
         setCurrentUser(null);
+      } finally {
+        setIsBootstrapping(false);
       }
     }
     void loadCurrentUser();
@@ -79,17 +110,19 @@ export default function App() {
             username,
           },
         });
+        persistSessionToken(response.session_token ?? null);
         setIssuedRecoveryKey(response.recovery_key);
         setStatus("Account created. Save your recovery key right now.");
         const me = await requestJson<CurrentUser>("/me", { method: "GET" });
         setCurrentUser(me);
       } else {
-        await requestJson<{ success: boolean }>("/login", {
+        const response = await requestJson<LoginResponse>("/login", {
           method: "POST",
           body: {
             recovery_key: recoveryKey,
           },
         });
+        persistSessionToken(response.session_token ?? null);
         setStatus("Signed in successfully.");
         const me = await requestJson<CurrentUser>("/me", { method: "GET" });
         setCurrentUser(me);
@@ -111,8 +144,24 @@ export default function App() {
 
   async function handleLogout() {
     await requestJson<{ success: boolean }>("/logout", { method: "POST" });
+    persistSessionToken(null);
     setCurrentUser(null);
     setStatus("Logged out.");
+  }
+
+  async function handleGenerateUsername() {
+    setIsGeneratingUsername(true);
+    setStatus("");
+    try {
+      const response = await requestJson<UsernameSuggestResponse>("/username/suggest", {
+        method: "GET",
+      });
+      setUsername(response.username);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to generate username");
+    } finally {
+      setIsGeneratingUsername(false);
+    }
   }
 
   if (routePath === "/terms") {
@@ -123,8 +172,31 @@ export default function App() {
     return <PrivacyPage onNavigateHome={() => handleNavigate("/")} />;
   }
 
+  if (routePath === "/admin") {
+    return <AdminPanel onNavigateHome={() => handleNavigate("/")} />;
+  }
+
   if (currentUser) {
-    return <Dashboard currentUser={currentUser} onLogout={handleLogout} />;
+    return (
+      <Dashboard
+        currentUser={currentUser}
+        focusedPostId={focusedPostId}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  if (isBootstrapping) {
+    return (
+      <main className="auth-page">
+        <section className="auth-layout">
+          <section className="form-panel">
+            <h1>VoidVault</h1>
+            <h2>Loading session...</h2>
+          </section>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -147,18 +219,28 @@ export default function App() {
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {authMode === "signup" ? (
-              <label>
-                <span>Enter username</span>
-                <input
-                  autoComplete="username"
-                  maxLength={20}
-                  minLength={3}
-                  required
-                  type="text"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                />
-              </label>
+              <>
+                <label>
+                  <span>Enter username</span>
+                  <input
+                    autoComplete="username"
+                    maxLength={20}
+                    minLength={3}
+                    required
+                    type="text"
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                  />
+                </label>
+                <button
+                  className="secondary-inline-btn"
+                  disabled={isGeneratingUsername || isSubmitting}
+                  type="button"
+                  onClick={() => void handleGenerateUsername()}
+                >
+                  {isGeneratingUsername ? "Generating..." : "Generate username"}
+                </button>
+              </>
             ) : null}
 
             {authMode === "login" ? (
