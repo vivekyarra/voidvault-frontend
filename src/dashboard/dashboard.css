@@ -344,6 +344,57 @@
   line-height: 1.45;
 }
 
+.profile-avatar-section {
+  position: relative;
+  width: 5.2rem;
+  height: 5.2rem;
+  margin: 0 auto 0.45rem;
+}
+
+.profile-avatar-image,
+.profile-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  border: 1px solid #2b2b2b;
+}
+
+.profile-avatar-image {
+  display: block;
+  object-fit: cover;
+  background: #000;
+}
+
+.profile-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: #111;
+  color: #f3f5f8;
+  font-weight: 800;
+  font-size: 1.55rem;
+}
+
+.profile-avatar-action {
+  position: absolute;
+  right: -0.1rem;
+  bottom: -0.1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 1px solid #344252;
+  background: #131b27;
+  color: #f0f4f8;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profile-avatar-action svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 .content-card footer {
   display: flex;
   gap: 0.45rem;

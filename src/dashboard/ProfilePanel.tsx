@@ -1,7 +1,15 @@
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { requestJson } from "../api";
 import type { CurrentUser, ProfileResponse } from "./types";
-import { LogoutIcon } from "./icons";
+import { LogoutIcon, PencilIcon } from "./icons";
+import { uploadProfileImage } from "./mediaUpload";
 import { formatDateTime, sendFollow, sendUnfollow } from "./shared";
 
 interface ProfileUpdateResponse {
@@ -33,12 +41,14 @@ export function ProfilePanel({
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [draftUsername, setDraftUsername] = useState("");
   const [draftBio, setDraftBio] = useState("");
-  const [draftAvatarUrl, setDraftAvatarUrl] = useState("");
   const [rotatedRecoveryKey, setRotatedRecoveryKey] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const loadProfile = useCallback(async () => {
     setStatus("");
@@ -51,7 +61,6 @@ export function ProfilePanel({
       setProfile(response);
       setDraftUsername(response.user.username);
       setDraftBio(response.user.bio ?? "");
-      setDraftAvatarUrl(response.user.avatar_url ?? "");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to load profile");
     } finally {
@@ -93,7 +102,6 @@ export function ProfilePanel({
         body: {
           username: draftUsername,
           bio: draftBio,
-          avatar_url: draftAvatarUrl,
         },
       });
       setStatus("Profile updated.");
@@ -102,6 +110,40 @@ export function ProfilePanel({
       setStatus(error instanceof Error ? error.message : "Failed to save profile");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleAvatarSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file || !profile?.stats.is_self) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setStatus("Please select an image file.");
+      event.target.value = "";
+      return;
+    }
+
+    setStatus("");
+    setIsUploadingAvatar(true);
+    setAvatarUploadProgress(0);
+
+    try {
+      const uploadedUrl = await uploadProfileImage(file, setAvatarUploadProgress);
+      await requestJson<ProfileUpdateResponse>("/profile", {
+        method: "PATCH",
+        body: {
+          avatar_url: uploadedUrl,
+        },
+      });
+      setStatus("Profile photo updated.");
+      await loadProfile();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to upload profile photo");
+    } finally {
+      event.target.value = "";
+      setIsUploadingAvatar(false);
     }
   }
 
@@ -178,17 +220,45 @@ export function ProfilePanel({
       {!isLoading && profile ? (
         <>
           <article className="content-card">
+            <div className="profile-avatar-section">
+              {profile.user.avatar_url ? (
+                <img
+                  alt={`${profile.user.username} profile`}
+                  className="profile-avatar-image"
+                  src={profile.user.avatar_url}
+                />
+              ) : (
+                <div className="profile-avatar-fallback">
+                  {profile.user.username.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              {profile.stats.is_self ? (
+                <>
+                  <button
+                    aria-label="Change profile photo"
+                    className="profile-avatar-action"
+                    disabled={isUploadingAvatar}
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                  >
+                    <PencilIcon />
+                  </button>
+                  <input
+                    accept="image/*"
+                    hidden
+                    ref={avatarInputRef}
+                    type="file"
+                    onChange={(event) => void handleAvatarSelected(event)}
+                  />
+                </>
+              ) : null}
+            </div>
             <header>
               <strong>@{profile.user.username}</strong>
               <span>Trust: {profile.user.trust_score}</span>
             </header>
             <p>Joined: {formatDateTime(profile.user.created_at)}</p>
             {profile.user.bio ? <p>{profile.user.bio}</p> : null}
-            {profile.user.avatar_url ? (
-              <a href={profile.user.avatar_url} rel="noreferrer" target="_blank">
-                View profile image
-              </a>
-            ) : null}
             <p>
               {profile.stats.posts} posts | {profile.stats.followers} followers | {" "}
               {profile.stats.following} following
@@ -225,16 +295,13 @@ export function ProfilePanel({
                   value={draftBio}
                   onChange={(event) => setDraftBio(event.target.value)}
                 />
-                <input
-                  placeholder="Cloudinary avatar URL"
-                  type="url"
-                  value={draftAvatarUrl}
-                  onChange={(event) => setDraftAvatarUrl(event.target.value)}
-                />
                 <button disabled={isSaving} type="submit">
                   {isSaving ? "Saving..." : "Save profile"}
                 </button>
               </form>
+              {isUploadingAvatar ? (
+                <p className="panel-status">Uploading profile photo: {avatarUploadProgress}%</p>
+              ) : null}
 
               <div className="card-list">
                 <article className="content-card">

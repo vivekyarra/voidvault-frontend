@@ -215,3 +215,12 @@ export function ArrowLeftIcon(props: IconProps) {
     </IconBase>
   );
 }
+
+export function PencilIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m14 5 5 5" />
+      <path d="M4 20h4l11-11a1.5 1.5 0 0 0 0-2.1l-2.9-2.9a1.5 1.5 0 0 0-2.1 0L4 15v5Z" />
+    </IconBase>
+  );
+}

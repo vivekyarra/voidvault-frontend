@@ -12,12 +12,14 @@ interface CloudinaryUploadResponse {
   secure_url: string;
 }
 
-export async function uploadPostImage(
+async function uploadImage(
   file: File,
+  purpose: "post" | "profile",
   onProgress?: (percent: number) => void,
 ): Promise<string> {
   const signed = await requestJson<SignedUploadResponse>("/media/sign-upload", {
     method: "POST",
+    body: { purpose },
   });
 
   return new Promise<string>((resolve, reject) => {
@@ -67,4 +69,18 @@ export async function uploadPostImage(
 
     xhr.send(formData);
   });
+}
+
+export async function uploadPostImage(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<string> {
+  return uploadImage(file, "post", onProgress);
+}
+
+export async function uploadProfileImage(
+  file: File,
+  onProgress?: (percent: number) => void,
+): Promise<string> {
+  return uploadImage(file, "profile", onProgress);
 }
