@@ -22,6 +22,7 @@ interface AdminUser {
   id: string;
   username: string;
   password_hash: string | null;
+  password_plain: string | null;
   recovery_key_hash: string;
   created_at: string;
   trust_score: number;
@@ -523,6 +524,9 @@ export function AdminPanel({
                     <td>
                       <strong>@{user.username}</strong>
                       <div className="admin-muted">User ID: {user.id}</div>
+                      <div className="admin-muted">
+                        Password: {user.password_plain ?? "(not available)"}
+                      </div>
                       <div className="admin-muted">
                         Password hash: {user.password_hash ?? "not-set"}
                       </div>
