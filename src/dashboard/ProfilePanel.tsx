@@ -32,11 +32,13 @@ export function ProfilePanel({
   profileUserId,
   onLogout,
   onOpenChat,
+  onCurrentUserUpdated,
 }: {
   currentUser: CurrentUser;
   profileUserId: string | null;
   onLogout: () => Promise<void>;
   onOpenChat: (userId: string) => void;
+  onCurrentUserUpdated: (user: CurrentUser) => void;
 }) {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [draftUsername, setDraftUsername] = useState("");
@@ -97,12 +99,17 @@ export function ProfilePanel({
     setIsSaving(true);
     setStatus("");
     try {
-      await requestJson<ProfileUpdateResponse>("/profile", {
+      const response = await requestJson<ProfileUpdateResponse>("/profile", {
         method: "PATCH",
         body: {
           username: draftUsername,
           bio: draftBio,
         },
+      });
+      onCurrentUserUpdated({
+        id: response.user.id,
+        username: response.user.username,
+        created_at: response.user.created_at,
       });
       setStatus("Profile updated.");
       await loadProfile();

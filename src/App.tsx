@@ -182,6 +182,7 @@ export default function App() {
         currentUser={currentUser}
         focusedPostId={focusedPostId}
         onLogout={handleLogout}
+        onCurrentUserUpdated={(nextUser) => setCurrentUser(nextUser)}
       />
     );
   }

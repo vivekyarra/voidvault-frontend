@@ -16,10 +16,12 @@ export function Dashboard({
   currentUser,
   onLogout,
   focusedPostId,
+  onCurrentUserUpdated,
 }: {
   currentUser: CurrentUser;
   onLogout: () => Promise<void>;
   focusedPostId: string | null;
+  onCurrentUserUpdated: (user: CurrentUser) => void;
 }) {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     try {
@@ -156,6 +158,7 @@ export function Dashboard({
             profileUserId={profileUserId}
             onLogout={handleLogout}
             onOpenChat={openChat}
+            onCurrentUserUpdated={onCurrentUserUpdated}
           />
         ) : null}
         {activeTab === "advice" ? <AdvicePanel currentUser={currentUser} /> : null}
