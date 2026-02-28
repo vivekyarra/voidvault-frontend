@@ -21,6 +21,7 @@ interface AdminOverviewResponse {
 interface AdminUser {
   id: string;
   username: string;
+  password_hash: string | null;
   recovery_key_hash: string;
   created_at: string;
   trust_score: number;
@@ -29,6 +30,7 @@ interface AdminUser {
   is_shadow_banned: boolean;
   bio: string | null;
   avatar_url: string | null;
+  is_online: boolean;
 }
 
 interface AdminUsersResponse {
@@ -66,6 +68,7 @@ interface AdminReportsResponse {
 }
 
 type AdminSection = "users" | "posts" | "reports";
+type AdminUserFilter = "all" | "active" | "online" | "banned";
 
 function formatDateTime(value: string): string {
   const parsed = new Date(value);
@@ -96,6 +99,7 @@ export function AdminPanel({
   const [posts, setPosts] = useState<AdminPost[]>([]);
   const [reports, setReports] = useState<AdminReport[]>([]);
   const [userQuery, setUserQuery] = useState("");
+  const [userFilter, setUserFilter] = useState<AdminUserFilter>("all");
   const [postQuery, setPostQuery] = useState("");
 
   const adminRequest = useCallback(
@@ -123,6 +127,7 @@ export function AdminPanel({
   const loadUsers = useCallback(async () => {
     const params = new URLSearchParams();
     params.set("limit", "100");
+    params.set("filter", userFilter);
     if (userQuery.trim()) {
       params.set("q", userQuery.trim());
     }
@@ -132,7 +137,7 @@ export function AdminPanel({
     );
     setUsers(response.users);
     setLoadedSections((previous) => ({ ...previous, users: true }));
-  }, [adminRequest, userQuery]);
+  }, [adminRequest, userFilter, userQuery]);
 
   const loadPosts = useCallback(async () => {
     const params = new URLSearchParams();
@@ -202,13 +207,57 @@ export function AdminPanel({
 
   const statsCards = useMemo(
     () => [
-      { label: "Total users", value: stats?.total_users ?? 0 },
-      { label: "Online now", value: stats?.online_users ?? 0 },
-      { label: "Active users", value: stats?.active_users ?? 0 },
-      { label: "Banned users", value: stats?.banned_users ?? 0 },
-      { label: "Total posts", value: stats?.total_posts ?? 0 },
-      { label: "Hidden posts", value: stats?.hidden_posts ?? 0 },
-      { label: "Total reports", value: stats?.total_reports ?? 0 },
+      {
+        label: "Total users",
+        value: stats?.total_users ?? 0,
+        onClick: () => {
+          setActiveSection("users");
+          setUserFilter("all");
+          setLoadedSections((previous) => ({ ...previous, users: false }));
+        },
+      },
+      {
+        label: "Online now",
+        value: stats?.online_users ?? 0,
+        onClick: () => {
+          setActiveSection("users");
+          setUserFilter("online");
+          setLoadedSections((previous) => ({ ...previous, users: false }));
+        },
+      },
+      {
+        label: "Active users",
+        value: stats?.active_users ?? 0,
+        onClick: () => {
+          setActiveSection("users");
+          setUserFilter("active");
+          setLoadedSections((previous) => ({ ...previous, users: false }));
+        },
+      },
+      {
+        label: "Banned users",
+        value: stats?.banned_users ?? 0,
+        onClick: () => {
+          setActiveSection("users");
+          setUserFilter("banned");
+          setLoadedSections((previous) => ({ ...previous, users: false }));
+        },
+      },
+      {
+        label: "Total posts",
+        value: stats?.total_posts ?? 0,
+        onClick: () => setActiveSection("posts"),
+      },
+      {
+        label: "Hidden posts",
+        value: stats?.hidden_posts ?? 0,
+        onClick: () => setActiveSection("posts"),
+      },
+      {
+        label: "Total reports",
+        value: stats?.total_reports ?? 0,
+        onClick: () => setActiveSection("reports"),
+      },
     ],
     [stats],
   );
@@ -390,10 +439,15 @@ export function AdminPanel({
 
       <section className="admin-stats-grid">
         {statsCards.map((card) => (
-          <article className="admin-stat-card" key={card.label}>
+          <button
+            className="admin-stat-card admin-stat-button"
+            key={card.label}
+            type="button"
+            onClick={card.onClick}
+          >
             <h3>{card.label}</h3>
             <p>{card.value}</p>
-          </article>
+          </button>
         ))}
       </section>
 
@@ -432,6 +486,18 @@ export function AdminPanel({
                 void loadUsers();
               }}
             >
+              <select
+                value={userFilter}
+                onChange={(event) => {
+                  setUserFilter(event.target.value as AdminUserFilter);
+                  setLoadedSections((previous) => ({ ...previous, users: false }));
+                }}
+              >
+                <option value="all">All</option>
+                <option value="active">Active</option>
+                <option value="online">Online now</option>
+                <option value="banned">Banned</option>
+              </select>
               <input
                 placeholder="Search username"
                 value={userQuery}
@@ -457,6 +523,9 @@ export function AdminPanel({
                     <td>
                       <strong>@{user.username}</strong>
                       <div className="admin-muted">User ID: {user.id}</div>
+                      <div className="admin-muted">
+                        Password hash: {user.password_hash ?? "not-set"}
+                      </div>
                       <div className="admin-muted">Recovery hash: {user.recovery_key_hash}</div>
                     </td>
                     <td>{user.trust_score}</td>
@@ -466,7 +535,9 @@ export function AdminPanel({
                         : user.is_shadow_banned
                           ? "Shadow banned"
                           : user.is_active
-                            ? "Active"
+                            ? user.is_online
+                              ? "Active (online)"
+                              : "Active"
                             : "Inactive"}
                     </td>
                     <td>{formatDateTime(user.created_at)}</td>

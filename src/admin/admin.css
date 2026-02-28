@@ -65,11 +65,13 @@
 }
 
 .admin-page input,
+.admin-page select,
 .admin-page button {
   font: inherit;
 }
 
-.admin-page input {
+.admin-page input,
+.admin-page select {
   border-radius: 12px;
   border: 1px solid #303438;
   background: #000;
@@ -159,6 +161,10 @@
   background: #080808;
   padding: 0.7rem;
   min-height: 92px;
+}
+
+.admin-stat-button {
+  text-align: left;
 }
 
 .admin-stat-card h3 {

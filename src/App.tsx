@@ -10,7 +10,7 @@ type AuthMode = "signup" | "login";
 type RoutePath = "/" | "/terms" | "/privacy" | "/admin";
 
 interface RegisterResponse {
-  recovery_key: string;
+  success: boolean;
   session_token?: string;
 }
 
@@ -56,8 +56,7 @@ export default function App() {
   const [routePath, setRoutePath] = useState<RoutePath>(getRoutePath());
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
   const [username, setUsername] = useState("");
-  const [recoveryKey, setRecoveryKey] = useState("");
-  const [issuedRecoveryKey, setIssuedRecoveryKey] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState("");
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,18 +107,19 @@ export default function App() {
           method: "POST",
           body: {
             username,
+            password,
           },
         });
         persistSessionToken(response.session_token ?? null);
-        setIssuedRecoveryKey(response.recovery_key);
-        setStatus("Account created. Save your recovery key right now.");
+        setStatus("Account created.");
         const me = await requestJson<CurrentUser>("/me", { method: "GET" });
         setCurrentUser(me);
       } else {
         const response = await requestJson<LoginResponse>("/login", {
           method: "POST",
           body: {
-            recovery_key: recoveryKey,
+            username,
+            password,
           },
         });
         persistSessionToken(response.session_token ?? null);
@@ -132,14 +132,6 @@ export default function App() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  async function handleCopyRecoveryKey() {
-    if (!issuedRecoveryKey) {
-      return;
-    }
-    await navigator.clipboard.writeText(issuedRecoveryKey);
-    setStatus("Recovery key copied to clipboard.");
   }
 
   async function handleLogout() {
@@ -219,43 +211,42 @@ export default function App() {
           <h2>{authMode === "signup" ? "Join today." : "Sign in."}</h2>
 
           <form className="auth-form" onSubmit={handleSubmit}>
+            <label>
+              <span>Enter username</span>
+              <input
+                autoComplete="username"
+                maxLength={20}
+                minLength={3}
+                required
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+              />
+            </label>
+
             {authMode === "signup" ? (
-              <>
-                <label>
-                  <span>Enter username</span>
-                  <input
-                    autoComplete="username"
-                    maxLength={20}
-                    minLength={3}
-                    required
-                    type="text"
-                    value={username}
-                    onChange={(event) => setUsername(event.target.value)}
-                  />
-                </label>
-                <button
-                  className="secondary-inline-btn"
-                  disabled={isGeneratingUsername || isSubmitting}
-                  type="button"
-                  onClick={() => void handleGenerateUsername()}
-                >
-                  {isGeneratingUsername ? "Generating..." : "Generate username"}
-                </button>
-              </>
+              <button
+                className="secondary-inline-btn"
+                disabled={isGeneratingUsername || isSubmitting}
+                type="button"
+                onClick={() => void handleGenerateUsername()}
+              >
+                {isGeneratingUsername ? "Generating..." : "Generate username"}
+              </button>
             ) : null}
 
-            {authMode === "login" ? (
-              <label>
-                <span>Enter recovery key</span>
-                <input
-                  autoComplete="off"
-                  required
-                  type="password"
-                  value={recoveryKey}
-                  onChange={(event) => setRecoveryKey(event.target.value)}
-                />
-              </label>
-            ) : null}
+            <label>
+              <span>Enter password</span>
+              <input
+                autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                maxLength={128}
+                minLength={8}
+                required
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
 
             <button disabled={isSubmitting} type="submit">
               {isSubmitting
@@ -292,16 +283,6 @@ export default function App() {
               ? "Already have an account?"
               : "Need a new account?"}
           </button>
-
-          {issuedRecoveryKey ? (
-            <div className="recovery-box">
-              <h3>Recovery key</h3>
-              <code>{issuedRecoveryKey}</code>
-              <button type="button" onClick={() => void handleCopyRecoveryKey()}>
-                Copy recovery key
-              </button>
-            </div>
-          ) : null}
 
           {status ? <p className="status-text">{status}</p> : null}
         </section>
