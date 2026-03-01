@@ -225,14 +225,18 @@ export default function App() {
             </label>
 
             {authMode === "signup" ? (
-              <button
-                className="secondary-inline-btn"
-                disabled={isGeneratingUsername || isSubmitting}
-                type="button"
-                onClick={() => void handleGenerateUsername()}
-              >
-                {isGeneratingUsername ? "Generating..." : "Generate username"}
-              </button>
+              <p className="username-suggest-line">
+                <button
+                  className="username-suggest-link"
+                  disabled={isGeneratingUsername || isSubmitting}
+                  type="button"
+                  onClick={() => void handleGenerateUsername()}
+                >
+                  {isGeneratingUsername
+                    ? "Generating username..."
+                    : "Auto generate random username?"}
+                </button>
+              </p>
             ) : null}
 
             <label>

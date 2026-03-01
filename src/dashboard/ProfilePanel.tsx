@@ -23,8 +23,8 @@ interface ProfileUpdateResponse {
   };
 }
 
-interface RecoveryRotationResponse {
-  recovery_key: string;
+interface ChangePasswordResponse {
+  success: boolean;
 }
 
 export function ProfilePanel({
@@ -43,10 +43,12 @@ export function ProfilePanel({
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [draftUsername, setDraftUsername] = useState("");
   const [draftBio, setDraftBio] = useState("");
-  const [rotatedRecoveryKey, setRotatedRecoveryKey] = useState<string | null>(null);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -184,19 +186,29 @@ export function ProfilePanel({
     }
   }
 
-  async function handleRotateRecoveryKey() {
-    const confirmed = window.confirm("Rotate recovery key? Store the new key immediately.");
-    if (!confirmed) {
+  async function handleChangePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!profile?.stats.is_self) {
       return;
     }
+
+    setIsChangingPassword(true);
+    setStatus("");
     try {
-      const response = await requestJson<RecoveryRotationResponse>("/account/recovery/rotate", {
+      await requestJson<ChangePasswordResponse>("/account/password/change", {
         method: "POST",
+        body: {
+          old_password: oldPassword,
+          new_password: newPassword,
+        },
       });
-      setRotatedRecoveryKey(response.recovery_key);
-      setStatus("Recovery key rotated. Save it now.");
+      setOldPassword("");
+      setNewPassword("");
+      setStatus("Password changed.");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to rotate recovery key");
+      setStatus(error instanceof Error ? error.message : "Failed to change password");
+    } finally {
+      setIsChangingPassword(false);
     }
   }
 
@@ -315,10 +327,32 @@ export function ProfilePanel({
                   <header>
                     <strong>Account controls</strong>
                   </header>
-                  <footer>
-                    <button type="button" onClick={() => void handleRotateRecoveryKey()}>
-                      Rotate recovery key
+                  <form className="composer" onSubmit={handleChangePassword}>
+                    <input
+                      autoComplete="current-password"
+                      maxLength={128}
+                      minLength={8}
+                      placeholder="Current password"
+                      required
+                      type="password"
+                      value={oldPassword}
+                      onChange={(event) => setOldPassword(event.target.value)}
+                    />
+                    <input
+                      autoComplete="new-password"
+                      maxLength={128}
+                      minLength={8}
+                      placeholder="New password"
+                      required
+                      type="password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                    />
+                    <button disabled={isChangingPassword} type="submit">
+                      {isChangingPassword ? "Changing..." : "Change password"}
                     </button>
+                  </form>
+                  <footer>
                     <button
                       className="logout-pill"
                       disabled={isLoggingOut}
@@ -335,7 +369,6 @@ export function ProfilePanel({
                       Delete account
                     </button>
                   </footer>
-                  {rotatedRecoveryKey ? <p><strong>New key:</strong> {rotatedRecoveryKey}</p> : null}
                 </article>
               </div>
             </>
