@@ -13,13 +13,15 @@ Browser -> Frontend (Pages) -> Drift Backend (Workers) -> Supabase + Cloudinary
 Frontend does not use Supabase auth directly.
 
 ## Features
-- Signup/login with recovery-key flow
+- Signup/login with username + password flow
+- Auto-generate username helper on signup
 - Mobile-first dashboard UI
 - Trending/following feed
 - Search, follow, notifications, chat, profile, advice
 - Post composer with media URL pipeline support
+- Profile editing + password change
 - Theme toggle and auth/session guard behavior
-- Admin route at `/admin` with moderation tools
+- Admin route at `/admin` with moderation + user personal-details view
 
 ## Environment
 Create `frontend/.env`:
@@ -54,6 +56,7 @@ Production domain:
 - API calls use `credentials: include`
 - CSRF header is attached from cookie for mutating requests
 - Session token fallback is handled for cross-browser compatibility
+- Admin personal-details view depends on backend migration `009_phase8_user_request_audit_logs.sql`
 
 ## Repository
 - GitHub: https://github.com/vivekyarra/voidvault-frontend
