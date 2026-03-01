@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, type KeyboardEvent, useEffect, useState } from "react";
 import { persistSessionToken, requestJson } from "./api";
 import { AdminPanel } from "./admin/AdminPanel";
 import { Dashboard } from "./dashboard/Dashboard";
@@ -156,6 +156,15 @@ export default function App() {
     }
   }
 
+  function handleUsernameSuggestKeydown(event: KeyboardEvent<HTMLSpanElement>) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      if (!isGeneratingUsername && !isSubmitting) {
+        void handleGenerateUsername();
+      }
+    }
+  }
+
   if (routePath === "/terms") {
     return <TermsPage onNavigateHome={() => handleNavigate("/")} />;
   }
@@ -226,16 +235,22 @@ export default function App() {
 
             {authMode === "signup" ? (
               <p className="username-suggest-line">
-                <button
+                <span
                   className="username-suggest-link"
-                  disabled={isGeneratingUsername || isSubmitting}
-                  type="button"
-                  onClick={() => void handleGenerateUsername()}
+                  aria-disabled={isGeneratingUsername || isSubmitting}
+                  role="button"
+                  tabIndex={isGeneratingUsername || isSubmitting ? -1 : 0}
+                  onClick={() => {
+                    if (!isGeneratingUsername && !isSubmitting) {
+                      void handleGenerateUsername();
+                    }
+                  }}
+                  onKeyDown={handleUsernameSuggestKeydown}
                 >
                   {isGeneratingUsername
                     ? "Generating username..."
                     : "Auto generate random username?"}
-                </button>
+                </span>
               </p>
             ) : null}
 

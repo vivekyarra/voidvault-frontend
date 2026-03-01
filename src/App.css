@@ -133,20 +133,20 @@
 }
 
 .username-suggest-link {
-  border: 0;
-  background: transparent;
+  display: inline;
   color: #8ecbff;
   cursor: pointer;
   font: inherit;
   font-size: 0.95rem;
-  padding: 0;
+  font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.username-suggest-link:disabled {
+.username-suggest-link[aria-disabled="true"] {
   opacity: 0.7;
-  cursor: not-allowed;
+  pointer-events: none;
+  cursor: default;
 }
 
 .auth-form button:disabled {
