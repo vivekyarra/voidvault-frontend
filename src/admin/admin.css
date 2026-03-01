@@ -255,6 +255,65 @@
   line-height: 1.4;
 }
 
+.admin-details-card {
+  margin-top: 0.8rem;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #060606;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-details-header h3,
+.admin-details-card h4 {
+  margin: 0;
+}
+
+.admin-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.admin-details-grid section,
+.admin-details-logs {
+  border: 1px solid #1f1f1f;
+  border-radius: 10px;
+  padding: 0.6rem;
+  background: #040404;
+}
+
+.admin-mini-list {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.admin-mini-list li {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.admin-mini-list li span {
+  color: #9ca6b0;
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.admin-table-compact {
+  min-width: 760px;
+}
+
 @media (max-width: 1200px) {
   .admin-stats-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -277,6 +336,10 @@
 
   .admin-inline-form input {
     width: 100%;
+  }
+
+  .admin-details-grid {
+    grid-template-columns: 1fr;
   }
 
   .admin-lock-card {

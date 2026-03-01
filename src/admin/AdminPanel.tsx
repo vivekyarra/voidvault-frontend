@@ -38,6 +38,47 @@ interface AdminUsersResponse {
   users: AdminUser[];
 }
 
+interface AdminUserDetailsResponse {
+  user: {
+    id: string;
+    username: string;
+    created_at: string;
+    trust_score: number;
+    is_active: boolean;
+    is_banned: boolean;
+    is_shadow_banned: boolean;
+    bio: string | null;
+    avatar_url: string | null;
+  };
+  sessions: Array<{
+    id: string;
+    device_hash: string | null;
+    created_at: string | null;
+    last_active: string | null;
+    expires_at: string | null;
+  }>;
+  request_logs: Array<{
+    id: string;
+    ip_address: string;
+    method: string;
+    path: string;
+    user_agent: string | null;
+    cf_country: string | null;
+    cf_region: string | null;
+    cf_city: string | null;
+    cf_colo: string | null;
+    cf_asn: number | null;
+    cf_ray: string | null;
+    created_at: string;
+  }>;
+  ip_summary: Array<{
+    ip_address: string;
+    count: number;
+    last_seen_at: string;
+  }>;
+  logging_available: boolean;
+}
+
 interface AdminPost {
   id: string;
   user_id: string;
@@ -102,6 +143,10 @@ export function AdminPanel({
   const [userQuery, setUserQuery] = useState("");
   const [userFilter, setUserFilter] = useState<AdminUserFilter>("all");
   const [postQuery, setPostQuery] = useState("");
+  const [selectedUserDetails, setSelectedUserDetails] = useState<AdminUserDetailsResponse | null>(
+    null,
+  );
+  const [isLoadingUserDetails, setIsLoadingUserDetails] = useState(false);
 
   const adminRequest = useCallback(
     async <TResponse,>(
@@ -315,6 +360,26 @@ export function AdminPanel({
     }
   }
 
+  async function handleViewUserDetails(userId: string) {
+    setBusyKey(`user-details:${userId}`);
+    setIsLoadingUserDetails(true);
+    setStatus("");
+    try {
+      const response = await adminRequest<AdminUserDetailsResponse>(
+        `/admin/user-details?user_id=${encodeURIComponent(userId)}&log_limit=200&session_limit=50`,
+        {
+          method: "GET",
+        },
+      );
+      setSelectedUserDetails(response);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to load personal details");
+    } finally {
+      setBusyKey(null);
+      setIsLoadingUserDetails(false);
+    }
+  }
+
   async function handleHidePost(postId: string, hidden: boolean) {
     setBusyKey(`post:${postId}`);
     setStatus("");
@@ -421,6 +486,7 @@ export function AdminPanel({
             onClick={() => {
               setAdminSecret(null);
               setTypedPassword("");
+              setSelectedUserDetails(null);
               setLoadedSections({
                 users: false,
                 posts: false,
@@ -463,14 +529,20 @@ export function AdminPanel({
         <button
           className={activeSection === "posts" ? "active" : ""}
           type="button"
-          onClick={() => setActiveSection("posts")}
+          onClick={() => {
+            setSelectedUserDetails(null);
+            setActiveSection("posts");
+          }}
         >
           Posts
         </button>
         <button
           className={activeSection === "reports" ? "active" : ""}
           type="button"
-          onClick={() => setActiveSection("reports")}
+          onClick={() => {
+            setSelectedUserDetails(null);
+            setActiveSection("reports");
+          }}
         >
           Reports
         </button>
@@ -550,6 +622,15 @@ export function AdminPanel({
                         <button
                           disabled={Boolean(busyKey)}
                           type="button"
+                          onClick={() => void handleViewUserDetails(user.id)}
+                        >
+                          {busyKey === `user-details:${user.id}` && isLoadingUserDetails
+                            ? "Loading..."
+                            : "Personal details"}
+                        </button>
+                        <button
+                          disabled={Boolean(busyKey)}
+                          type="button"
                           onClick={() =>
                             void handleModeration(user.id, { is_banned: !user.is_banned })
                           }
@@ -582,6 +663,106 @@ export function AdminPanel({
               </tbody>
             </table>
           </div>
+          {selectedUserDetails ? (
+            <article className="admin-details-card">
+              <header className="admin-details-header">
+                <div>
+                  <h3>Personal details: @{selectedUserDetails.user.username}</h3>
+                  <p className="admin-muted">User ID: {selectedUserDetails.user.id}</p>
+                </div>
+                <button type="button" onClick={() => setSelectedUserDetails(null)}>
+                  Close
+                </button>
+              </header>
+
+              {!selectedUserDetails.logging_available ? (
+                <p className="admin-status">
+                  Request logging table is not available yet. Run migration
+                  `009_phase8_user_request_audit_logs.sql`.
+                </p>
+              ) : null}
+
+              <div className="admin-details-grid">
+                <section>
+                  <h4>IP summary</h4>
+                  {selectedUserDetails.ip_summary.length === 0 ? (
+                    <p className="admin-muted">No IP data yet.</p>
+                  ) : (
+                    <ul className="admin-mini-list">
+                      {selectedUserDetails.ip_summary.map((entry) => (
+                        <li key={entry.ip_address}>
+                          <strong>{entry.ip_address}</strong>
+                          <span>
+                            {entry.count} request(s), last seen {formatDateTime(entry.last_seen_at)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+
+                <section>
+                  <h4>Active sessions</h4>
+                  {selectedUserDetails.sessions.length === 0 ? (
+                    <p className="admin-muted">No sessions found.</p>
+                  ) : (
+                    <ul className="admin-mini-list">
+                      {selectedUserDetails.sessions.map((session) => (
+                        <li key={session.id}>
+                          <strong>{session.id}</strong>
+                          <span>
+                            Last active:{" "}
+                            {session.last_active ? formatDateTime(session.last_active) : "unknown"}
+                          </span>
+                          <span>Expires: {session.expires_at ? formatDateTime(session.expires_at) : "n/a"}</span>
+                          {session.device_hash ? <span>Device hash: {session.device_hash}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+              </div>
+
+              <section className="admin-details-logs">
+                <h4>Recent request logs</h4>
+                {selectedUserDetails.request_logs.length === 0 ? (
+                  <p className="admin-muted">No request logs found.</p>
+                ) : (
+                  <div className="admin-table-wrap">
+                    <table className="admin-table admin-table-compact">
+                      <thead>
+                        <tr>
+                          <th>Time</th>
+                          <th>IP</th>
+                          <th>Request</th>
+                          <th>Network</th>
+                          <th>User agent</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedUserDetails.request_logs.map((entry) => (
+                          <tr key={entry.id}>
+                            <td>{formatDateTime(entry.created_at)}</td>
+                            <td>{entry.ip_address}</td>
+                            <td>
+                              {entry.method} {entry.path}
+                            </td>
+                            <td>
+                              {entry.cf_country ?? "-"} / {entry.cf_region ?? "-"} / {entry.cf_city ?? "-"}
+                              <div className="admin-muted">
+                                colo: {entry.cf_colo ?? "-"} | asn: {entry.cf_asn ?? "-"} | ray: {entry.cf_ray ?? "-"}
+                              </div>
+                            </td>
+                            <td>{entry.user_agent ?? "-"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
+            </article>
+          ) : null}
         </section>
       ) : null}
 
