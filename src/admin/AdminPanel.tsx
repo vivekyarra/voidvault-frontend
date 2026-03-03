@@ -16,6 +16,21 @@ interface AdminStats {
 
 interface AdminOverviewResponse {
   stats: AdminStats;
+  settings?: {
+    post_expiry_mode?: PostExpiryMode;
+  };
+  storage?: {
+    supabase?: {
+      used_bytes: number | null;
+      limit_bytes: number | null;
+      available: boolean;
+    };
+    cloudinary?: {
+      used_bytes: number | null;
+      limit_bytes: number | null;
+      available: boolean;
+    };
+  };
 }
 
 interface AdminUser {
@@ -111,6 +126,33 @@ interface AdminReportsResponse {
 
 type AdminSection = "users" | "posts" | "reports";
 type AdminUserFilter = "all" | "active" | "online" | "banned";
+type PostExpiryMode = "7d" | "15d" | "30d" | "forever";
+
+interface StorageUsageView {
+  usedBytes: number | null;
+  limitBytes: number | null;
+  available: boolean;
+}
+
+function formatBytes(bytes: number | null): string {
+  if (bytes === null || !Number.isFinite(bytes)) {
+    return "unknown";
+  }
+  if (bytes === 0) {
+    return "0 B";
+  }
+
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let index = 0;
+  while (value >= 1024 && index < units.length - 1) {
+    value /= 1024;
+    index += 1;
+  }
+
+  const precision = value >= 100 ? 0 : value >= 10 ? 1 : 2;
+  return `${value.toFixed(precision)} ${units[index]}`;
+}
 
 function formatDateTime(value: string): string {
   const parsed = new Date(value);
@@ -143,6 +185,23 @@ export function AdminPanel({
   const [userQuery, setUserQuery] = useState("");
   const [userFilter, setUserFilter] = useState<AdminUserFilter>("all");
   const [postQuery, setPostQuery] = useState("");
+  const [postExpiryMode, setPostExpiryMode] = useState<PostExpiryMode>("15d");
+  const [isSavingPostExpiry, setIsSavingPostExpiry] = useState(false);
+  const [storageUsage, setStorageUsage] = useState<{
+    supabase: StorageUsageView;
+    cloudinary: StorageUsageView;
+  }>({
+    supabase: {
+      usedBytes: null,
+      limitBytes: null,
+      available: false,
+    },
+    cloudinary: {
+      usedBytes: null,
+      limitBytes: null,
+      available: false,
+    },
+  });
   const [selectedUserDetails, setSelectedUserDetails] = useState<AdminUserDetailsResponse | null>(
     null,
   );
@@ -168,6 +227,21 @@ export function AdminPanel({
       method: "GET",
     });
     setStats(response.stats);
+    if (response.settings?.post_expiry_mode) {
+      setPostExpiryMode(response.settings.post_expiry_mode);
+    }
+    setStorageUsage({
+      supabase: {
+        usedBytes: response.storage?.supabase?.used_bytes ?? null,
+        limitBytes: response.storage?.supabase?.limit_bytes ?? null,
+        available: response.storage?.supabase?.available ?? false,
+      },
+      cloudinary: {
+        usedBytes: response.storage?.cloudinary?.used_bytes ?? null,
+        limitBytes: response.storage?.cloudinary?.limit_bytes ?? null,
+        available: response.storage?.cloudinary?.available ?? false,
+      },
+    });
   }, [adminRequest]);
 
   const loadUsers = useCallback(async () => {
@@ -420,6 +494,28 @@ export function AdminPanel({
     }
   }
 
+  async function handleSavePostExpiry() {
+    setIsSavingPostExpiry(true);
+    setStatus("");
+    try {
+      await adminRequest<{ success: boolean; post_expiry_mode: PostExpiryMode }>(
+        "/admin/post-expiry",
+        {
+          method: "POST",
+          body: {
+            mode: postExpiryMode,
+          },
+        },
+      );
+      await loadOverview();
+      setStatus("Post expiry updated. New posts will use this setting.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to update post expiry");
+    } finally {
+      setIsSavingPostExpiry(false);
+    }
+  }
+
   function handleUnlock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (typedPassword !== ADMIN_PANEL_PASSWORD) {
@@ -516,6 +612,57 @@ export function AdminPanel({
             <p>{card.value}</p>
           </button>
         ))}
+      </section>
+
+      <section className="admin-platform-grid">
+        <article className="admin-platform-card">
+          <h3>Post expiry</h3>
+          <p className="admin-muted">Applies to newly created posts.</p>
+          <div className="admin-inline-form">
+            <select
+              value={postExpiryMode}
+              onChange={(event) => setPostExpiryMode(event.target.value as PostExpiryMode)}
+            >
+              <option value="7d">7 days</option>
+              <option value="15d">15 days</option>
+              <option value="30d">30 days</option>
+              <option value="forever">Forever</option>
+            </select>
+            <button
+              disabled={isSavingPostExpiry}
+              type="button"
+              onClick={() => void handleSavePostExpiry()}
+            >
+              {isSavingPostExpiry ? "Saving..." : "OK"}
+            </button>
+          </div>
+        </article>
+
+        <article className="admin-platform-card">
+          <h3>Storage usage</h3>
+          <div className="admin-storage-line">
+            <span>Supabase:</span>
+            <strong>
+              {formatBytes(storageUsage.supabase.usedBytes)} /{" "}
+              {formatBytes(storageUsage.supabase.limitBytes)}
+            </strong>
+          </div>
+          <div className="admin-storage-line">
+            <span>Cloudinary:</span>
+            <strong>
+              {formatBytes(storageUsage.cloudinary.usedBytes)} /{" "}
+              {formatBytes(storageUsage.cloudinary.limitBytes)}
+            </strong>
+          </div>
+          <p className="admin-muted">
+            {!storageUsage.supabase.available
+              ? "Supabase usage unavailable (apply migration 010 / set optional DB limit env). "
+              : ""}
+            {!storageUsage.cloudinary.available
+              ? "Cloudinary usage unavailable (requires CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)."
+              : ""}
+          </p>
+        </article>
       </section>
 
       <nav aria-label="Admin sections" className="admin-tabs">

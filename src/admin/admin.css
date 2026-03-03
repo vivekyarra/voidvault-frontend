@@ -145,6 +145,32 @@
   flex-wrap: wrap;
 }
 
+.admin-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.admin-platform-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  background: #080808;
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-platform-card h3 {
+  margin: 0;
+}
+
+.admin-storage-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .admin-tabs button {
   min-width: 5.8rem;
 }
@@ -317,6 +343,10 @@
 @media (max-width: 1200px) {
   .admin-stats-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .admin-platform-grid {
+    grid-template-columns: 1fr;
   }
 }
 
