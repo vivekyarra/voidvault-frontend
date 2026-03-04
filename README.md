@@ -18,6 +18,9 @@ Frontend does not use Supabase auth directly.
 - Mobile-first dashboard UI
 - Trending/following feed
 - Search, follow, notifications, chat, profile, advice
+- Post sharing: native device share + in-app share to other VoidVault users
+- Report modal with optional reason field
+- Chat user search directly from chat screen
 - Post composer with media URL pipeline support
 - Profile editing + password change
 - Theme toggle and auth/session guard behavior

@@ -6,6 +6,8 @@ import type {
   ChatMessage,
   ChatMessagesResponse,
   CurrentUser,
+  SearchResponse,
+  SearchUser,
 } from "./types";
 import { ArrowLeftIcon } from "./icons";
 import { formatDateTime } from "./shared";
@@ -30,6 +32,9 @@ export function ChatPanel({
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [mobileThreadOpen, setMobileThreadOpen] = useState(false);
+  const [chatSearchQuery, setChatSearchQuery] = useState("");
+  const [chatSearchResults, setChatSearchResults] = useState<SearchUser[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
   const loadConversations = useCallback(async () => {
     setStatus("");
@@ -86,19 +91,63 @@ export function ChatPanel({
     });
   }, [activeConversationId, loadMessages]);
 
+  const searchUsersForChat = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setChatSearchResults([]);
+      return;
+    }
+
+    setIsSearchingUsers(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("q", query.trim());
+      params.set("limit", "20");
+      const response = await requestJson<SearchResponse>(`/search?${params.toString()}`, {
+        method: "GET",
+      });
+      setChatSearchResults(response.users);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to search users");
+    } finally {
+      setIsSearchingUsers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!chatSearchQuery.trim()) {
+      setChatSearchResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void searchUsersForChat(chatSearchQuery);
+    }, 220);
+
+    return () => clearTimeout(timeout);
+  }, [chatSearchQuery, searchUsersForChat]);
+
+  const startChat = useCallback(
+    async (userId: string) => {
+      const response = await requestJson<{ conversation_id: string }>("/chat/start", {
+        method: "POST",
+        body: { user_id: userId },
+      });
+      await loadConversations();
+      setActiveConversationId(response.conversation_id);
+      setMobileThreadOpen(true);
+      setChatSearchQuery("");
+      setChatSearchResults([]);
+    },
+    [loadConversations],
+  );
+
   useEffect(() => {
     async function handleTarget() {
       if (!chatTargetUserId) {
         return;
       }
       try {
-        const response = await requestJson<{ conversation_id: string }>("/chat/start", {
-          method: "POST",
-          body: { user_id: chatTargetUserId },
-        });
-        await loadConversations();
-        setActiveConversationId(response.conversation_id);
-        setMobileThreadOpen(true);
+        await startChat(chatTargetUserId);
       } catch (error) {
         setStatus(error instanceof Error ? error.message : "Failed to open chat");
       } finally {
@@ -106,7 +155,7 @@ export function ChatPanel({
       }
     }
     void handleTarget();
-  }, [chatTargetUserId, loadConversations, onChatTargetHandled]);
+  }, [chatTargetUserId, onChatTargetHandled, startChat]);
 
   async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -147,6 +196,28 @@ export function ChatPanel({
       <div className="chat-grid">
         {showConversationList ? (
         <aside className="chat-list">
+          <div className="search-form chat-search-form">
+            <input
+              placeholder="Search users to chat"
+              value={chatSearchQuery}
+              onChange={(event) => setChatSearchQuery(event.target.value)}
+            />
+          </div>
+
+          {isSearchingUsers ? <p className="empty-state">Searching users...</p> : null}
+
+          {chatSearchResults.map((user) => (
+            <button
+              key={`search-${user.id}`}
+              className="chat-list-item"
+              type="button"
+              onClick={() => void startChat(user.id)}
+            >
+              <strong>@{user.username}</strong>
+              <span>Start conversation</span>
+            </button>
+          ))}
+
           {conversations.length === 0 ? <p className="empty-state">No chats yet.</p> : null}
           {conversations.map((conversation) => (
             <button

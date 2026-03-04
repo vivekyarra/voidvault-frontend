@@ -579,6 +579,10 @@
   align-content: start;
 }
 
+.chat-search-form {
+  margin-bottom: 0.15rem;
+}
+
 .chat-list-item {
   border: 0;
   border-radius: 10px;
@@ -873,7 +877,7 @@
     padding: 0.45rem;
   }
 
-  .modal-card {
+.modal-card {
     width: min(100%, 100vw);
     border-radius: 12px;
     padding: 0.8rem;
@@ -884,6 +888,21 @@
   .dashboard-fab {
     display: grid;
   }
+}
+
+.share-user-modal {
+  width: min(540px, 100%);
+  max-height: min(80vh, 720px);
+  overflow: auto;
+}
+
+.share-user-row {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.report-modal {
+  width: min(520px, 100%);
 }
 
 @media (max-width: 520px) {

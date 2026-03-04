@@ -6,11 +6,14 @@ import type {
   FeedResponse,
   PostComment,
   PostCommentsResponse,
+  SearchResponse,
+  SearchUser,
 } from "./types";
 import {
   AlertIcon,
   BookmarkIcon,
   CommentIcon,
+  PaperPlaneIcon,
   ShareIcon,
   ThumbDownIcon,
   ThumbUpIcon,
@@ -28,6 +31,16 @@ interface EngagementResponse {
 
 interface CommentCreateResponse {
   comment: PostComment;
+}
+
+interface StartChatResponse {
+  conversation_id: string;
+}
+
+interface SendChatMessageResponse {
+  message: {
+    id: string;
+  };
 }
 
 export function HomePanel({
@@ -51,6 +64,14 @@ export function HomePanel({
   const [openCommentsFor, setOpenCommentsFor] = useState<Record<string, boolean>>({});
   const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({});
   const [commentDraftByPost, setCommentDraftByPost] = useState<Record<string, string>>({});
+  const [shareTargetPost, setShareTargetPost] = useState<FeedPost | null>(null);
+  const [shareUserQuery, setShareUserQuery] = useState("");
+  const [shareUserResults, setShareUserResults] = useState<SearchUser[]>([]);
+  const [isLoadingShareUsers, setIsLoadingShareUsers] = useState(false);
+  const [isSendingShare, setIsSendingShare] = useState(false);
+  const [reportTargetPostId, setReportTargetPostId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const loadFeed = useCallback(
     async (cursor: string | null, append: boolean) => {
@@ -168,15 +189,28 @@ export function HomePanel({
     }
   }
 
-  async function handleReport(postId: string) {
+  async function handleSubmitReport() {
+    if (!reportTargetPostId) {
+      return;
+    }
+
+    setIsSubmittingReport(true);
     try {
       await requestJson<{ success: boolean }>("/report", {
         method: "POST",
-        body: { content_type: "post", content_id: postId },
+        body: {
+          content_type: "post",
+          content_id: reportTargetPostId,
+          reason: reportReason,
+        },
       });
       setStatus("Post reported.");
+      setReportTargetPostId(null);
+      setReportReason("");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Failed to report post");
+    } finally {
+      setIsSubmittingReport(false);
     }
   }
 
@@ -247,14 +281,115 @@ export function HomePanel({
     }
   }
 
-  async function handleShare(postId: string) {
-    const shareUrl = `${window.location.origin}/?post=${postId}`;
+  async function handleShare(post: FeedPost) {
+    const shareUrl = `${window.location.origin}/?post=${post.id}`;
+
+    if ("share" in navigator && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "VoidVault post",
+          text: post.content.slice(0, 120),
+          url: shareUrl,
+        });
+        setStatus("Shared.");
+        return;
+      } catch {
+        // Ignore cancellation and fall back to clipboard.
+      }
+    }
+
     try {
       await navigator.clipboard.writeText(shareUrl);
       setStatus("Share link copied.");
     } catch {
       setStatus(shareUrl);
     }
+  }
+
+  const loadShareUsers = useCallback(async (query: string) => {
+    setIsLoadingShareUsers(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "20");
+      if (query.trim()) {
+        params.set("q", query.trim());
+      }
+      const response = await requestJson<SearchResponse>(`/search?${params.toString()}`, {
+        method: "GET",
+      });
+      setShareUserResults(response.users);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to search users");
+    } finally {
+      setIsLoadingShareUsers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!shareTargetPost) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void loadShareUsers(shareUserQuery);
+    }, 220);
+
+    return () => clearTimeout(timeout);
+  }, [shareTargetPost, shareUserQuery, loadShareUsers]);
+
+  async function handleShareToUser(userId: string) {
+    if (!shareTargetPost) {
+      return;
+    }
+
+    setIsSendingShare(true);
+    try {
+      const start = await requestJson<StartChatResponse>("/chat/start", {
+        method: "POST",
+        body: { user_id: userId },
+      });
+      const shareUrl = `${window.location.origin}/?post=${shareTargetPost.id}`;
+      await requestJson<SendChatMessageResponse>(`/chat/${start.conversation_id}/message`, {
+        method: "POST",
+        body: {
+          content: `Check this post on VoidVault: ${shareUrl}`,
+        },
+      });
+      setStatus("Post shared in chat.");
+      setShareTargetPost(null);
+      setShareUserQuery("");
+      setShareUserResults([]);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Failed to share in chat");
+    } finally {
+      setIsSendingShare(false);
+    }
+  }
+
+  function openShareToUsers(post: FeedPost) {
+    setShareTargetPost(post);
+    setShareUserQuery("");
+    setShareUserResults([]);
+  }
+
+  function openReportModal(postId: string) {
+    setReportTargetPostId(postId);
+    setReportReason("");
+  }
+
+  function closeReportModal() {
+    setReportTargetPostId(null);
+    setReportReason("");
+  }
+
+  function closeShareModal() {
+    setShareTargetPost(null);
+    setShareUserQuery("");
+    setShareUserResults([]);
+  }
+
+  async function handleReport(postId: string) {
+    openReportModal(postId);
   }
 
   const combinedPosts = useMemo(() => {
@@ -350,8 +485,21 @@ export function HomePanel({
                 <BookmarkIcon />
                 <span>{post.engagement?.saveCount ?? 0}</span>
               </button>
-              <button aria-label="Share post" className="icon-action" type="button" onClick={() => void handleShare(post.id)}>
+              <button
+                aria-label="Share post externally"
+                className="icon-action"
+                type="button"
+                onClick={() => void handleShare(post)}
+              >
                 <ShareIcon />
+              </button>
+              <button
+                aria-label="Share post to VoidVault user"
+                className="icon-action"
+                type="button"
+                onClick={() => openShareToUsers(post)}
+              >
+                <PaperPlaneIcon />
               </button>
               <button
                 aria-label="Comments"
@@ -437,6 +585,79 @@ export function HomePanel({
         >
           {isLoadingMore ? "Loading..." : "Load more"}
         </button>
+      ) : null}
+
+      {shareTargetPost ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <section className="modal-card share-user-modal">
+            <header className="panel-header">
+              <h3>Share to VoidVault user</h3>
+              <button className="secondary-btn" type="button" onClick={closeShareModal}>
+                Close
+              </button>
+            </header>
+            <div className="search-form">
+              <input
+                autoFocus
+                placeholder="Search username"
+                value={shareUserQuery}
+                onChange={(event) => setShareUserQuery(event.target.value)}
+              />
+            </div>
+            {isLoadingShareUsers ? <p className="empty-state">Searching users...</p> : null}
+            {!isLoadingShareUsers && shareUserResults.length === 0 ? (
+              <p className="empty-state">No users found.</p>
+            ) : null}
+            <div className="card-list">
+              {shareUserResults.map((user) => (
+                <article className="content-card share-user-row" key={user.id}>
+                  <div>
+                    <strong>@{user.username}</strong>
+                  </div>
+                  <button
+                    className="secondary-btn"
+                    disabled={isSendingShare}
+                    type="button"
+                    onClick={() => void handleShareToUser(user.id)}
+                  >
+                    {isSendingShare ? "Sharing..." : "Share"}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {reportTargetPostId ? (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <section className="modal-card report-modal">
+            <header className="panel-header">
+              <h3>Report post</h3>
+              <button className="secondary-btn" type="button" onClick={closeReportModal}>
+                Close
+              </button>
+            </header>
+            <label className="composer">
+              <span>Reason (optional)</span>
+              <textarea
+                maxLength={500}
+                placeholder="Add reason for report (optional)"
+                rows={4}
+                value={reportReason}
+                onChange={(event) => setReportReason(event.target.value)}
+              />
+            </label>
+            <button
+              className="secondary-btn"
+              disabled={isSubmittingReport}
+              type="button"
+              onClick={() => void handleSubmitReport()}
+            >
+              {isSubmittingReport ? "Submitting..." : "Submit report"}
+            </button>
+          </section>
+        </div>
       ) : null}
     </section>
   );

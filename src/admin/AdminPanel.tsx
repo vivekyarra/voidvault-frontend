@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { requestJson } from "../api";
 import "./admin.css";
 
@@ -117,6 +117,7 @@ interface AdminReport {
   content_type: string;
   content_id: string;
   reporter_id: string | null;
+  reason: string | null;
   created_at: string;
 }
 
@@ -435,6 +436,12 @@ export function AdminPanel({
   }
 
   async function handleViewUserDetails(userId: string) {
+    if (selectedUserDetails?.user.id === userId) {
+      setSelectedUserDetails(null);
+      setBusyKey(null);
+      return;
+    }
+
     setBusyKey(`user-details:${userId}`);
     setIsLoadingUserDetails(true);
     setStatus("");
@@ -514,6 +521,101 @@ export function AdminPanel({
     } finally {
       setIsSavingPostExpiry(false);
     }
+  }
+
+  function renderUserDetails(details: AdminUserDetailsResponse) {
+    return (
+      <article className="admin-details-card">
+        {!details.logging_available ? (
+          <p className="admin-status">
+            Request logging table is not available yet. Run migration
+            `009_phase8_user_request_audit_logs.sql`.
+          </p>
+        ) : null}
+
+        <div className="admin-details-grid">
+          <section>
+            <h4>IP summary</h4>
+            {details.ip_summary.length === 0 ? (
+              <p className="admin-muted">No IP data yet.</p>
+            ) : (
+              <ul className="admin-mini-list">
+                {details.ip_summary.map((entry) => (
+                  <li key={entry.ip_address}>
+                    <strong>{entry.ip_address}</strong>
+                    <span>
+                      {entry.count} request(s), last seen {formatDateTime(entry.last_seen_at)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section>
+            <h4>Active sessions</h4>
+            {details.sessions.length === 0 ? (
+              <p className="admin-muted">No sessions found.</p>
+            ) : (
+              <ul className="admin-mini-list">
+                {details.sessions.map((session) => (
+                  <li key={session.id}>
+                    <strong>{session.id}</strong>
+                    <span>
+                      Last active:{" "}
+                      {session.last_active ? formatDateTime(session.last_active) : "unknown"}
+                    </span>
+                    <span>
+                      Expires: {session.expires_at ? formatDateTime(session.expires_at) : "n/a"}
+                    </span>
+                    {session.device_hash ? <span>Device hash: {session.device_hash}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <section className="admin-details-logs">
+          <h4>Recent request logs</h4>
+          {details.request_logs.length === 0 ? (
+            <p className="admin-muted">No request logs found.</p>
+          ) : (
+            <div className="admin-table-wrap">
+              <table className="admin-table admin-table-compact">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>IP</th>
+                    <th>Request</th>
+                    <th>Network</th>
+                    <th>User agent</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {details.request_logs.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>{formatDateTime(entry.created_at)}</td>
+                      <td>{entry.ip_address}</td>
+                      <td>
+                        {entry.method} {entry.path}
+                      </td>
+                      <td>
+                        {entry.cf_country ?? "-"} / {entry.cf_region ?? "-"} / {entry.cf_city ?? "-"}
+                        <div className="admin-muted">
+                          colo: {entry.cf_colo ?? "-"} | asn: {entry.cf_asn ?? "-"} | ray: {entry.cf_ray ?? "-"}
+                        </div>
+                      </td>
+                      <td>{entry.user_agent ?? "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </article>
+    );
   }
 
   function handleUnlock(event: FormEvent<HTMLFormElement>) {
@@ -738,178 +840,90 @@ export function AdminPanel({
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>
-                      <strong>@{user.username}</strong>
-                      <div className="admin-muted">User ID: {user.id}</div>
-                      <div className="admin-muted">
-                        Password: {user.password_plain ?? "(not available)"}
-                      </div>
-                      <div className="admin-muted">
-                        Password hash: {user.password_hash ?? "not-set"}
-                      </div>
-                      <div className="admin-muted">Recovery hash: {user.recovery_key_hash}</div>
-                    </td>
-                    <td>{user.trust_score}</td>
-                    <td>
-                      {user.is_banned
-                        ? "Banned"
-                        : user.is_shadow_banned
-                          ? "Shadow banned"
-                          : user.is_active
-                            ? user.is_online
-                              ? "Active (online)"
-                              : "Active"
-                            : "Inactive"}
-                    </td>
-                    <td>{formatDateTime(user.created_at)}</td>
-                    <td>
-                      <div className="admin-actions">
-                        <button
-                          disabled={Boolean(busyKey)}
-                          type="button"
-                          onClick={() => void handleViewUserDetails(user.id)}
-                        >
-                          {busyKey === `user-details:${user.id}` && isLoadingUserDetails
-                            ? "Loading..."
-                            : "Personal details"}
-                        </button>
-                        <button
-                          disabled={Boolean(busyKey)}
-                          type="button"
-                          onClick={() =>
-                            void handleModeration(user.id, { is_banned: !user.is_banned })
-                          }
-                        >
-                          {user.is_banned ? "Unban" : "Ban"}
-                        </button>
-                        <button
-                          disabled={Boolean(busyKey)}
-                          type="button"
-                          onClick={() =>
-                            void handleModeration(user.id, {
-                              is_shadow_banned: !user.is_shadow_banned,
-                            })
-                          }
-                        >
-                          {user.is_shadow_banned ? "Unshadow" : "Shadow ban"}
-                        </button>
-                        <button
-                          className="danger"
-                          disabled={Boolean(busyKey)}
-                          type="button"
-                          onClick={() => void handleDeleteUser(user.id)}
-                        >
-                          {busyKey === `user-delete:${user.id}` ? "Deleting..." : "Delete user"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((user) => {
+                  const isExpanded = selectedUserDetails?.user.id === user.id;
+                  return (
+                    <Fragment key={user.id}>
+                      <tr>
+                        <td>
+                          <strong>@{user.username}</strong>
+                          <div className="admin-muted">User ID: {user.id}</div>
+                          <div className="admin-muted">
+                            Password: {user.password_plain ?? "(not available)"}
+                          </div>
+                          <div className="admin-muted">
+                            Password hash: {user.password_hash ?? "not-set"}
+                          </div>
+                          <div className="admin-muted">Recovery hash: {user.recovery_key_hash}</div>
+                        </td>
+                        <td>{user.trust_score}</td>
+                        <td>
+                          {user.is_banned
+                            ? "Banned"
+                            : user.is_shadow_banned
+                              ? "Shadow banned"
+                              : user.is_active
+                                ? user.is_online
+                                  ? "Active (online)"
+                                  : "Active"
+                                : "Inactive"}
+                        </td>
+                        <td>{formatDateTime(user.created_at)}</td>
+                        <td>
+                          <div className="admin-actions">
+                            <button
+                              disabled={Boolean(busyKey)}
+                              type="button"
+                              onClick={() => void handleViewUserDetails(user.id)}
+                            >
+                              {busyKey === `user-details:${user.id}` && isLoadingUserDetails
+                                ? "Loading..."
+                                : isExpanded
+                                  ? "Hide personal details"
+                                  : "Personal details"}
+                            </button>
+                            <button
+                              disabled={Boolean(busyKey)}
+                              type="button"
+                              onClick={() =>
+                                void handleModeration(user.id, { is_banned: !user.is_banned })
+                              }
+                            >
+                              {user.is_banned ? "Unban" : "Ban"}
+                            </button>
+                            <button
+                              disabled={Boolean(busyKey)}
+                              type="button"
+                              onClick={() =>
+                                void handleModeration(user.id, {
+                                  is_shadow_banned: !user.is_shadow_banned,
+                                })
+                              }
+                            >
+                              {user.is_shadow_banned ? "Unshadow" : "Shadow ban"}
+                            </button>
+                            <button
+                              className="danger"
+                              disabled={Boolean(busyKey)}
+                              type="button"
+                              onClick={() => void handleDeleteUser(user.id)}
+                            >
+                              {busyKey === `user-delete:${user.id}` ? "Deleting..." : "Delete user"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                      {isExpanded && selectedUserDetails ? (
+                        <tr>
+                          <td colSpan={5}>{renderUserDetails(selectedUserDetails)}</td>
+                        </tr>
+                      ) : null}
+                    </Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-          {selectedUserDetails ? (
-            <article className="admin-details-card">
-              <header className="admin-details-header">
-                <div>
-                  <h3>Personal details: @{selectedUserDetails.user.username}</h3>
-                  <p className="admin-muted">User ID: {selectedUserDetails.user.id}</p>
-                </div>
-                <button type="button" onClick={() => setSelectedUserDetails(null)}>
-                  Close
-                </button>
-              </header>
-
-              {!selectedUserDetails.logging_available ? (
-                <p className="admin-status">
-                  Request logging table is not available yet. Run migration
-                  `009_phase8_user_request_audit_logs.sql`.
-                </p>
-              ) : null}
-
-              <div className="admin-details-grid">
-                <section>
-                  <h4>IP summary</h4>
-                  {selectedUserDetails.ip_summary.length === 0 ? (
-                    <p className="admin-muted">No IP data yet.</p>
-                  ) : (
-                    <ul className="admin-mini-list">
-                      {selectedUserDetails.ip_summary.map((entry) => (
-                        <li key={entry.ip_address}>
-                          <strong>{entry.ip_address}</strong>
-                          <span>
-                            {entry.count} request(s), last seen {formatDateTime(entry.last_seen_at)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-
-                <section>
-                  <h4>Active sessions</h4>
-                  {selectedUserDetails.sessions.length === 0 ? (
-                    <p className="admin-muted">No sessions found.</p>
-                  ) : (
-                    <ul className="admin-mini-list">
-                      {selectedUserDetails.sessions.map((session) => (
-                        <li key={session.id}>
-                          <strong>{session.id}</strong>
-                          <span>
-                            Last active:{" "}
-                            {session.last_active ? formatDateTime(session.last_active) : "unknown"}
-                          </span>
-                          <span>Expires: {session.expires_at ? formatDateTime(session.expires_at) : "n/a"}</span>
-                          {session.device_hash ? <span>Device hash: {session.device_hash}</span> : null}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              </div>
-
-              <section className="admin-details-logs">
-                <h4>Recent request logs</h4>
-                {selectedUserDetails.request_logs.length === 0 ? (
-                  <p className="admin-muted">No request logs found.</p>
-                ) : (
-                  <div className="admin-table-wrap">
-                    <table className="admin-table admin-table-compact">
-                      <thead>
-                        <tr>
-                          <th>Time</th>
-                          <th>IP</th>
-                          <th>Request</th>
-                          <th>Network</th>
-                          <th>User agent</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedUserDetails.request_logs.map((entry) => (
-                          <tr key={entry.id}>
-                            <td>{formatDateTime(entry.created_at)}</td>
-                            <td>{entry.ip_address}</td>
-                            <td>
-                              {entry.method} {entry.path}
-                            </td>
-                            <td>
-                              {entry.cf_country ?? "-"} / {entry.cf_region ?? "-"} / {entry.cf_city ?? "-"}
-                              <div className="admin-muted">
-                                colo: {entry.cf_colo ?? "-"} | asn: {entry.cf_asn ?? "-"} | ray: {entry.cf_ray ?? "-"}
-                              </div>
-                            </td>
-                            <td>{entry.user_agent ?? "-"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-            </article>
-          ) : null}
         </section>
       ) : null}
 
@@ -997,6 +1011,7 @@ export function AdminPanel({
                   <th>Type</th>
                   <th>Content ID</th>
                   <th>Reporter</th>
+                  <th>Reason</th>
                   <th>Created</th>
                 </tr>
               </thead>
@@ -1006,6 +1021,7 @@ export function AdminPanel({
                     <td>{report.content_type}</td>
                     <td>{report.content_id}</td>
                     <td>{report.reporter_id ?? "anonymous"}</td>
+                    <td>{report.reason ?? "-"}</td>
                     <td>{formatDateTime(report.created_at)}</td>
                   </tr>
                 ))}

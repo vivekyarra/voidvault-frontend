@@ -25,6 +25,7 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
   const [questionDraft, setQuestionDraft] = useState("");
   const [replyDrafts, setReplyDrafts] = useState<ReplyDraftMap>({});
   const [repliesByAdvice, setRepliesByAdvice] = useState<ReplyMap>({});
+  const [openRepliesByAdvice, setOpenRepliesByAdvice] = useState<Record<string, boolean>>({});
 
   const loadAdvice = useCallback(
     async (cursor: string | null, append: boolean) => {
@@ -118,6 +119,26 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
     }
   }
 
+  function toggleReplies(adviceId: string) {
+    const currentlyOpen = Boolean(openRepliesByAdvice[adviceId]);
+    if (currentlyOpen) {
+      setOpenRepliesByAdvice((previous) => ({
+        ...previous,
+        [adviceId]: false,
+      }));
+      return;
+    }
+
+    setOpenRepliesByAdvice((previous) => ({
+      ...previous,
+      [adviceId]: true,
+    }));
+
+    if (!repliesByAdvice[adviceId]) {
+      void loadReplies(adviceId);
+    }
+  }
+
   return (
     <section className="dashboard-panel">
       <header className="panel-header">
@@ -192,12 +213,12 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
             ) : null}
 
             <footer>
-              <button type="button" onClick={() => void loadReplies(advice.id)}>
-                View replies
+              <button type="button" onClick={() => toggleReplies(advice.id)}>
+                {openRepliesByAdvice[advice.id] ? "Hide replies" : "View replies"}
               </button>
             </footer>
 
-            {(repliesByAdvice[advice.id] ?? []).length > 0 ? (
+            {openRepliesByAdvice[advice.id] && (repliesByAdvice[advice.id] ?? []).length > 0 ? (
               <div className="card-list">
                 {(repliesByAdvice[advice.id] ?? []).map((reply) => (
                   <article className="content-card" key={reply.id}>
@@ -213,6 +234,10 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
                   </article>
                 ))}
               </div>
+            ) : null}
+
+            {openRepliesByAdvice[advice.id] && (repliesByAdvice[advice.id] ?? []).length === 0 ? (
+              <p className="empty-state">No replies yet.</p>
             ) : null}
           </article>
         ))}
