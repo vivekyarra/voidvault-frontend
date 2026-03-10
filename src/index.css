@@ -1,50 +1,58 @@
 :root {
   color-scheme: dark;
 
-  /* Backgrounds */
   --bg-void: #06070a;
   --bg-deep: #0c0e13;
   --bg-card: #111318;
   --bg-card-2: #181c23;
-  --bg-input: #0f1117;
+  --bg-input: #0d0f14;
 
-  /* Borders */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-s: rgba(255, 255, 255, 0.06);
+  --border-d: rgba(255, 255, 255, 0.11);
+  --border-str: rgba(255, 255, 255, 0.18);
 
-  /* Text */
-  --text-primary: #f4f5f8;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-placeholder: #4b5563;
+  --text-1: #f4f5f8;
+  --text-2: #9ca3af;
+  --text-3: #6b7280;
+  --text-4: #4b5563;
 
-  /* Interactive */
-  --focus-ring: rgba(255, 255, 255, 0.15);
-  --hover-fill: rgba(255, 255, 255, 0.04);
-  --active-fill: rgba(255, 255, 255, 0.08);
+  --hover: rgba(255, 255, 255, 0.04);
+  --active: rgba(255, 255, 255, 0.08);
+  --focus: rgba(255, 255, 255, 0.07);
 
-  /* Danger */
   --danger: #ef4444;
-  --danger-dim: rgba(239, 68, 68, 0.12);
-  --danger-border: rgba(239, 68, 68, 0.25);
+  --danger-d: rgba(239, 68, 68, 0.12);
+  --danger-b: rgba(239, 68, 68, 0.25);
 
-  /* Radius */
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 20px;
   --r-pill: 100px;
 
-  /* Sidebar */
-  --sidebar-width: 280px;
+  --sidebar: 280px;
+  --header: 64px;
+  --mob-bar: 64px;
 
-  /* Supporting */
+  /* Legacy aliases to keep existing component CSS stable. */
+  --border-subtle: var(--border-s);
+  --border-default: var(--border-d);
+  --border-strong: var(--border-str);
+  --text-primary: var(--text-1);
+  --text-secondary: var(--text-2);
+  --text-muted: var(--text-3);
+  --text-placeholder: var(--text-4);
+  --hover-fill: var(--hover);
+  --active-fill: var(--active);
+  --focus-ring: var(--focus);
+  --danger-dim: var(--danger-d);
+  --danger-border: var(--danger-b);
+  --sidebar-width: var(--sidebar);
   --shadow-soft: 0 20px 44px rgba(0, 0, 0, 0.28);
   --content-width: 1160px;
 
   font-family: "Outfit", sans-serif;
-  color: var(--text-primary);
+  color: var(--text-1);
   background-color: var(--bg-void);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -72,9 +80,10 @@ html {
 body {
   font-family: "Outfit", sans-serif;
   background: var(--bg-void);
-  color: var(--text-primary);
+  color: var(--text-1);
   overflow-x: hidden;
   overflow-y: auto;
+  -webkit-text-size-adjust: 100%;
 }
 
 button,
@@ -102,29 +111,36 @@ video {
 
 ::selection {
   color: var(--bg-void);
-  background: var(--text-primary);
+  background: var(--text-1);
 }
 
-.field-input {
+.field-input,
+.f-input {
   width: 100%;
   background: var(--bg-input);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-d);
   border-radius: var(--r-md);
-  padding: 13px 16px;
+  padding: 14px 16px;
   font-family: "Outfit", sans-serif;
-  font-size: 0.92rem;
-  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-1);
   outline: none;
+  min-height: 52px;
+  -webkit-appearance: none;
+  appearance: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.field-input::placeholder {
-  color: var(--text-placeholder);
+.field-input::placeholder,
+.f-input::placeholder {
+  color: var(--text-4);
 }
 
-.field-input:focus {
-  border-color: var(--border-strong);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+.field-input:focus,
+.f-input:focus {
+  border-color: var(--border-str);
+  box-shadow: 0 0 0 3px var(--focus);
 }
 
 .btn-primary,
@@ -143,13 +159,14 @@ video {
 }
 
 .btn-primary {
-  background: var(--text-primary);
+  background: var(--text-1);
   color: var(--bg-void);
   border: none;
   border-radius: var(--r-md);
-  padding: 12px 20px;
+  min-height: 50px;
+  padding: 0 24px;
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 
 .btn-primary:hover {
@@ -157,25 +174,31 @@ video {
   transform: translateY(-1px);
 }
 
+.btn-primary:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+
 .btn-secondary {
   background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-default);
+  color: var(--text-2);
+  border: 1px solid var(--border-d);
   border-radius: var(--r-md);
-  padding: 11px 20px;
+  min-height: 48px;
+  padding: 0 24px;
   font-weight: 500;
   font-size: 0.88rem;
 }
 
 .btn-secondary:hover {
-  background: var(--hover-fill);
-  color: var(--text-primary);
-  border-color: var(--border-strong);
+  background: var(--hover);
+  color: var(--text-1);
+  border-color: var(--border-str);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-3);
   border: none;
   border-radius: var(--r-sm);
   padding: 8px 12px;
@@ -184,16 +207,17 @@ video {
 }
 
 .btn-ghost:hover {
-  background: var(--hover-fill);
-  color: var(--text-primary);
+  background: var(--hover);
+  color: var(--text-1);
 }
 
 .btn-danger {
-  background: var(--danger-dim);
+  background: var(--danger-d);
   color: var(--danger);
-  border: 1px solid var(--danger-border);
+  border: 1px solid var(--danger-b);
   border-radius: var(--r-md);
-  padding: 11px 20px;
+  min-height: 48px;
+  padding: 0 24px;
   font-weight: 500;
   font-size: 0.88rem;
 }
@@ -229,14 +253,19 @@ video {
 }
 
 .ui-status.is-danger {
-  border-color: var(--danger-border);
-  background: var(--danger-dim);
+  border-color: var(--danger-b);
+  background: var(--danger-d);
   color: var(--danger);
 }
 
 @media (max-width: 768px) {
-  .field-input {
-    font-size: 1rem;
+  .btn-primary {
+    min-height: 54px;
+  }
+
+  .btn-secondary,
+  .btn-danger {
+    min-height: 50px;
   }
 }
 
@@ -252,6 +281,12 @@ video {
 .ui-empty .ui-display {
   color: var(--text-secondary);
   font-size: 1.5rem;
+}
+
+.ui-empty-brand {
+  width: 48px;
+  height: 39px;
+  opacity: 0.3;
 }
 
 .ui-empty p {

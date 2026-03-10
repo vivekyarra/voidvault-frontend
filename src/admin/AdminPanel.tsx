@@ -1,5 +1,6 @@
 import { Fragment, type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { requestJson } from "../api";
+import { RazorVLogo } from "../brand/RazorVLogo";
 import "./admin.css";
 
 const ADMIN_PANEL_PASSWORD = "vivekbadass";
@@ -633,7 +634,7 @@ export function AdminPanel({
       <main className="admin-page">
         <section className="admin-lock-card">
           <div className="admin-brand">
-            <img alt="VoidVault" className="admin-brand-mark" src="/voidvault-logo.svg" />
+            <RazorVLogo aria-hidden="true" className="admin-brand-mark" />
             <h1>VOIDVAULT ADMIN</h1>
           </div>
           <p>Enter admin password to continue.</p>
@@ -660,7 +661,7 @@ export function AdminPanel({
     <main className="admin-page">
       <header className="admin-topbar">
         <div className="admin-brand admin-brand-inline">
-          <img alt="VoidVault" className="admin-brand-mark" src="/voidvault-logo.svg" />
+          <RazorVLogo aria-hidden="true" className="admin-brand-mark" />
           <div>
             <h1>VOIDVAULT ADMIN</h1>
             <p>Full moderation and platform controls.</p>

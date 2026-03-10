@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { RazorVLogo } from "./brand/RazorVLogo";
 
 interface LegalPageProps {
   onNavigateHome: () => void;
@@ -24,6 +25,10 @@ function LegalLayout({
   return (
     <main className="legal-shell">
       <header className="legal-header">
+        <div className="legal-brand">
+          <RazorVLogo aria-hidden="true" className="legal-brand-mark" />
+          <span>VOIDVAULT</span>
+        </div>
         <button className="ghost-button" type="button" onClick={onNavigateHome}>
           Back
         </button>

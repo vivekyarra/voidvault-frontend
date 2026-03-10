@@ -26,24 +26,27 @@ export function formatRelativeTime(isoString: string): string {
     return "";
   }
 
-  const diffMs = Date.now() - timestamp.getTime();
-  if (diffMs < 0) {
-    return shortMonthDayFormatter.format(timestamp);
+  const diffSeconds = Math.floor((Date.now() - timestamp.getTime()) / 1000);
+  if (diffSeconds < 0) {
+    return timestamp.getFullYear() === new Date().getFullYear()
+      ? shortMonthDayFormatter.format(timestamp)
+      : shortMonthDayYearFormatter.format(timestamp);
   }
 
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 60) {
-    return `${Math.max(1, minutes)}m ago`;
+  if (diffSeconds < 60) {
+    return "just now";
   }
 
-  const hours = Math.floor(diffMs / 3_600_000);
-  if (hours < 24) {
-    return `${hours}h ago`;
+  if (diffSeconds < 3_600) {
+    return `${Math.floor(diffSeconds / 60)}m ago`;
   }
 
-  const days = Math.floor(diffMs / 86_400_000);
-  if (days < 7) {
-    return `${days}d ago`;
+  if (diffSeconds < 86_400) {
+    return `${Math.floor(diffSeconds / 3_600)}h ago`;
+  }
+
+  if (diffSeconds < 604_800) {
+    return `${Math.floor(diffSeconds / 86_400)}d ago`;
   }
 
   return timestamp.getFullYear() === new Date().getFullYear()
