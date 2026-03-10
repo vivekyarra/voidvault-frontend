@@ -9,7 +9,7 @@ import { ChatPanel } from "./ChatPanel";
 import { ProfilePanel } from "./ProfilePanel";
 import { AdvicePanel } from "./AdvicePanel";
 import { ComposePostModal } from "./ComposePostModal";
-import { MoonIcon, PlusIcon, SunIcon } from "./icons";
+import { MoonIcon, SunIcon } from "./icons";
 import "./dashboard.css";
 
 const PAGE_META: Record<DashboardTab, { title: string; subtitle?: string }> = {
@@ -77,12 +77,16 @@ export function Dashboard({
     }
   }, [theme]);
 
+  useEffect(() => {
+    document.body.classList.add("dashboard-mobile-nav-present");
+    return () => document.body.classList.remove("dashboard-mobile-nav-present");
+  }, []);
+
   const themeLabel = useMemo(
     () => (theme === "dark" ? "Switch to light mode" : "Switch to dark mode"),
     [theme],
   );
 
-  const profileInitial = currentUser.username.slice(0, 1).toUpperCase();
   const pageMeta = PAGE_META[activeTab];
 
   function openCurrentUserProfile() {
@@ -93,36 +97,15 @@ export function Dashboard({
   return (
     <main className={`dashboard-shell theme-${theme}`}>
       <header className="dashboard-mobile-header">
+        <h1>{pageMeta.title}</h1>
         <button
-          aria-label="Go to home"
-          className="mobile-logo-btn"
+          aria-label={themeLabel}
+          className="mobile-theme-btn"
           type="button"
-          onClick={() => setActiveTab("home")}
+          onClick={() => setTheme((previous) => (previous === "dark" ? "light" : "dark"))}
         >
-          <img alt="VoidVault" className="mobile-brand-mark" src="/voidvault-logo.svg" />
+          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
-        <div className="mobile-page-heading">
-          <p className="ui-kicker">@{currentUser.username}</p>
-          <h1>{pageMeta.title}</h1>
-        </div>
-        <div className="mobile-header-actions">
-          <button
-            aria-label="Open profile"
-            className="mobile-profile-chip"
-            type="button"
-            onClick={openCurrentUserProfile}
-          >
-            {profileInitial}
-          </button>
-          <button
-            aria-label={themeLabel}
-            className="mobile-theme-btn"
-            type="button"
-            onClick={() => setTheme((previous) => (previous === "dark" ? "light" : "dark"))}
-          >
-            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-          </button>
-        </div>
       </header>
 
       <SideNav
@@ -194,17 +177,6 @@ export function Dashboard({
           {activeTab === "advice" ? <AdvicePanel currentUser={currentUser} /> : null}
         </div>
       </section>
-
-      {activeTab === "home" ? (
-        <button
-          aria-label="Create post"
-          className="dashboard-fab"
-          type="button"
-          onClick={() => setIsComposerOpen(true)}
-        >
-          <PlusIcon />
-        </button>
-      ) : null}
 
       <ComposePostModal
         isOpen={isComposerOpen}

@@ -54,6 +54,7 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -72,6 +73,8 @@ body {
   font-family: "Outfit", sans-serif;
   background: var(--bg-void);
   color: var(--text-primary);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 button,
@@ -79,6 +82,12 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
 }
 
 a {
@@ -128,6 +137,7 @@ video {
   gap: 8px;
   font-family: "Outfit", sans-serif;
   cursor: pointer;
+  min-height: 44px;
   transition: opacity 0.15s ease, transform 0.15s ease, background-color 0.15s ease,
     border-color 0.15s ease, color 0.15s ease;
 }
@@ -222,6 +232,12 @@ video {
   border-color: var(--danger-border);
   background: var(--danger-dim);
   color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .field-input {
+    font-size: 1rem;
+  }
 }
 
 .ui-empty {

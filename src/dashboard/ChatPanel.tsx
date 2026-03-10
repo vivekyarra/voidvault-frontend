@@ -73,7 +73,7 @@ export function ChatPanel({
   }, [loadConversations]);
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 980px)");
+    const query = window.matchMedia("(max-width: 768px)");
     const apply = () => setIsMobileView(query.matches);
     apply();
     query.addEventListener("change", apply);

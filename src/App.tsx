@@ -230,6 +230,10 @@ export default function App() {
             </div>
           </aside>
           <section className="form-panel">
+            <div className="auth-mobile-brand">
+              <img alt="VoidVault" className="auth-mobile-brand-mark" src="/voidvault-logo.svg" />
+              <span>VOIDVAULT</span>
+            </div>
             <div className="auth-form-copy">
               <p className="ui-kicker">Session</p>
               <h1 className="ui-display">LOADING.</h1>
@@ -290,6 +294,10 @@ export default function App() {
         </aside>
 
         <section className="form-panel">
+          <div className="auth-mobile-brand">
+            <img alt="VoidVault" className="auth-mobile-brand-mark" src="/voidvault-logo.svg" />
+            <span>VOIDVAULT</span>
+          </div>
           <div className="auth-mode-switch" role="tablist" aria-label="Authentication mode">
             <button
               aria-selected={authMode === "signup"}
