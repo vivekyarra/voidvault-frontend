@@ -373,7 +373,68 @@
 
 .card-list {
   display: grid;
-  gap: 0.68rem;
+  gap: 12px;
+}
+
+.post-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  background: var(--bg-card);
+  display: grid;
+  gap: 0;
+  transition: border-color 0.15s ease;
+}
+
+.post-card:hover {
+  border-color: var(--border-default);
+}
+
+.post-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.post-card-username {
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.post-card-username-label {
+  cursor: default;
+}
+
+.post-card-channel {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.post-card-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 300;
+}
+
+.post-card-content {
+  margin: 10px 0 0;
+  color: var(--text-primary);
+  font-size: 0.93rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.post-card-media {
+  display: block;
+  margin-top: 14px;
 }
 
 .content-card {
@@ -474,18 +535,18 @@
 .content-image {
   display: block;
   width: 100%;
-  max-height: 420px;
+  max-height: 500px;
   object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid #2a2a2a;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-subtle);
 }
 
 .content-video {
   display: block;
   width: 100%;
-  max-height: 520px;
-  border-radius: 12px;
-  border: 1px solid #2a2a2a;
+  max-height: 500px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-subtle);
   background: #000;
 }
 
@@ -499,64 +560,127 @@
 }
 
 .focused-post {
-  border-color: #4b4b4b;
-  box-shadow: 0 0 0 1px #4b4b4b;
+  border-color: var(--border-default);
+  box-shadow: 0 0 0 1px var(--border-default);
 }
 
 .post-actions {
-  border-top: 1px solid #222;
-  padding-top: 0.45rem;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.icon-action {
+.post-action {
   border: 0;
   background: transparent;
-  color: #8f98a2;
+  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
-  gap: 0.28rem;
-  padding: 0.2rem;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
   cursor: pointer;
   font: inherit;
-  min-height: 1.85rem;
+  min-height: 32px;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.icon-action:hover {
-  color: #d8e0e8;
+.post-action:hover {
+  background: var(--hover-fill);
+  color: var(--text-primary);
 }
 
-.icon-action svg {
-  width: 1.16rem;
-  height: 1.16rem;
+.post-action svg {
+  width: 16px;
+  height: 16px;
 }
 
-.icon-action span {
-  font-size: 0.95rem;
-  font-weight: 600;
+.post-action span {
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
-.icon-action.active {
-  color: #fff;
+.post-action.is-active {
+  color: var(--text-primary);
 }
 
-.report-action {
+.post-action-report {
   margin-left: auto;
 }
 
+.post-action-delete {
+  color: var(--danger);
+}
+
+.post-action-delete:hover {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
 .danger {
-  padding: 0.4rem 0.62rem !important;
-  border-radius: 999px !important;
-  cursor: pointer !important;
-  border: 1px solid #7f2c36 !important;
-  background: #3b1117 !important;
-  color: #f4c8cf !important;
+  border: 1px solid var(--danger-border);
+  border-radius: var(--r-md);
+  background: var(--danger-dim);
+  color: var(--danger);
 }
 
 .comment-block {
   display: grid;
-  gap: 0.5rem;
-  border-top: 1px solid #282828;
-  padding-top: 0.6rem;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.comment-composer {
+  display: grid;
+  gap: 10px;
+}
+
+.comment-input {
+  min-height: 84px;
+  resize: vertical;
+}
+
+.comment-submit {
+  justify-self: end;
+}
+
+.comment-list {
+  display: grid;
+  gap: 10px;
+}
+
+.post-comment-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 16px;
+}
+
+.post-comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.post-comment-header strong {
+  font-size: 0.84rem;
+}
+
+.post-comment-header time {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.post-comment-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .modal-backdrop {
@@ -913,7 +1037,7 @@
     gap: 0.15rem;
   }
 
-  .report-action {
+  .post-action-report {
     margin-left: 0;
   }
 

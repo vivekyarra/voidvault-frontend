@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { requestJson } from "../api";
 import type { SearchResponse } from "./types";
-import { formatMonthDay, formatRelativeTime } from "../utils/time";
+import { formatMonthDay } from "../utils/time";
+import { PostCard } from "./PostCard";
 import { sendFollow, sendUnfollow } from "./shared";
 
 export function SearchPanel({
@@ -105,31 +106,16 @@ export function SearchPanel({
           {result.posts.length === 0 ? <p className="empty-state">No matching posts.</p> : null}
           <div className="card-list">
             {result.posts.map((post) => (
-              <article className="content-card" key={post.id}>
-                <header>
-                  <button
-                    className="inline-link"
-                    type="button"
-                    onClick={() => onOpenProfile(post.user_id)}
-                  >
-                    @{post.username}
-                  </button>
-                  <span>#{post.channel}</span>
-                  <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
-                </header>
-                <p>{post.content}</p>
-                {post.image_url ? (
-                  <img alt="Post attachment" className="content-image" src={post.image_url} />
-                ) : null}
-                {post.video_url ? (
-                  <video
-                    className="content-video"
-                    controls
-                    preload="metadata"
-                    src={post.video_url}
-                  />
-                ) : null}
-              </article>
+              <PostCard
+                key={post.id}
+                channel={post.channel}
+                content={post.content}
+                createdAt={post.created_at}
+                imageUrl={post.image_url}
+                onOpenProfile={() => onOpenProfile(post.user_id)}
+                username={post.username}
+                videoUrl={post.video_url}
+              />
             ))}
           </div>
         </>

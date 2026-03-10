@@ -18,6 +18,7 @@ import {
   ThumbDownIcon,
   ThumbUpIcon,
 } from "./icons";
+import { PostCard } from "./PostCard";
 import { formatRelativeTime } from "../utils/time";
 
 interface PostLookupResponse {
@@ -430,37 +431,21 @@ export function HomePanel({
 
       <div className="card-list">
         {combinedPosts.map((post) => (
-          <article className={`content-card ${focusedPostId === post.id ? "focused-post" : ""}`} key={post.id}>
-            <header>
-              <button
-                className="inline-link"
-                type="button"
-                onClick={() => onOpenProfile(post.user_id)}
-              >
-                @{post.username}
-              </button>
-              <span>#{post.channel}</span>
-              <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
-            </header>
-            <p>{post.content}</p>
-            {post.image_url ? (
-              <a href={post.image_url} rel="noreferrer" target="_blank">
-                <img alt="Post attachment" className="content-image" src={post.image_url} />
-              </a>
-            ) : null}
-            {post.video_url ? (
-              <video
-                className="content-video"
-                controls
-                preload="metadata"
-                src={post.video_url}
-              />
-            ) : null}
-
-            <footer className="post-actions">
+          <PostCard
+            key={post.id}
+            channel={post.channel}
+            className={focusedPostId === post.id ? "focused-post" : ""}
+            content={post.content}
+            createdAt={post.created_at}
+            imageUrl={post.image_url}
+            onOpenProfile={() => onOpenProfile(post.user_id)}
+            username={post.username}
+            videoUrl={post.video_url}
+            actions={
+              <>
               <button
                 aria-label="Like"
-                className={`icon-action ${post.engagement?.myReaction === "like" ? "active" : ""}`}
+                className={`post-action ${post.engagement?.myReaction === "like" ? "is-active" : ""}`}
                 type="button"
                 onClick={() => void applyReaction(post, "like")}
               >
@@ -469,7 +454,7 @@ export function HomePanel({
               </button>
               <button
                 aria-label="Dislike"
-                className={`icon-action ${post.engagement?.myReaction === "dislike" ? "active" : ""}`}
+                className={`post-action ${post.engagement?.myReaction === "dislike" ? "is-active" : ""}`}
                 type="button"
                 onClick={() => void applyReaction(post, "dislike")}
               >
@@ -478,7 +463,7 @@ export function HomePanel({
               </button>
               <button
                 aria-label="Save post"
-                className={`icon-action ${post.engagement?.isSaved ? "active" : ""}`}
+                className={`post-action ${post.engagement?.isSaved ? "is-active" : ""}`}
                 type="button"
                 onClick={() => void toggleSave(post)}
               >
@@ -487,7 +472,7 @@ export function HomePanel({
               </button>
               <button
                 aria-label="Share post externally"
-                className="icon-action"
+                className="post-action"
                 type="button"
                 onClick={() => void handleShare(post)}
               >
@@ -495,7 +480,7 @@ export function HomePanel({
               </button>
               <button
                 aria-label="Share post to VoidVault user"
-                className="icon-action"
+                className="post-action"
                 type="button"
                 onClick={() => openShareToUsers(post)}
               >
@@ -503,7 +488,7 @@ export function HomePanel({
               </button>
               <button
                 aria-label="Comments"
-                className="icon-action"
+                className="post-action"
                 type="button"
                 onClick={() => {
                   setOpenCommentsFor((previous) => ({
@@ -518,20 +503,32 @@ export function HomePanel({
                 <CommentIcon />
                 <span>{post.engagement?.commentCount ?? 0}</span>
               </button>
-              <button aria-label="Report post" className="icon-action report-action" type="button" onClick={() => void handleReport(post.id)}>
+              <button
+                aria-label="Report post"
+                className="post-action post-action-report"
+                type="button"
+                onClick={() => void handleReport(post.id)}
+              >
                 <AlertIcon />
               </button>
               {post.user_id === currentUser.id ? (
-                <button className="danger" type="button" onClick={() => void handleDelete(post.id)}>
+                <button
+                  className="post-action post-action-delete"
+                  type="button"
+                  onClick={() => void handleDelete(post.id)}
+                >
                   Delete
                 </button>
               ) : null}
-            </footer>
+              </>
+            }
+          >
 
             {openCommentsFor[post.id] ? (
               <div className="comment-block">
-                <div className="composer">
+                <div className="comment-composer">
                   <textarea
+                    className="field-input comment-input"
                     maxLength={500}
                     placeholder="Write a comment"
                     rows={2}
@@ -543,18 +540,18 @@ export function HomePanel({
                       }))
                     }
                   />
-                  <button type="button" onClick={() => void addComment(post.id)}>
+                  <button className="btn-secondary comment-submit" type="button" onClick={() => void addComment(post.id)}>
                     Comment
                   </button>
                 </div>
 
-                <div className="card-list">
+                <div className="comment-list">
                   {(commentsByPost[post.id] ?? []).length === 0 ? (
                     <p className="empty-state">No comments yet.</p>
                   ) : (
                     (commentsByPost[post.id] ?? []).map((comment) => (
-                      <article className="content-card" key={comment.id}>
-                        <header>
+                      <article className="post-comment-card" key={comment.id}>
+                        <header className="post-comment-header">
                           <strong>@{comment.username}</strong>
                           <time dateTime={comment.created_at}>
                             {formatRelativeTime(comment.created_at)}
@@ -567,7 +564,7 @@ export function HomePanel({
                 </div>
               </div>
             ) : null}
-          </article>
+          </PostCard>
         ))}
       </div>
 

@@ -10,7 +10,8 @@ import { requestJson } from "../api";
 import type { CurrentUser, ProfileResponse } from "./types";
 import { LogoutIcon, PencilIcon } from "./icons";
 import { uploadProfileImage } from "./mediaUpload";
-import { formatLongDate, formatRelativeTime } from "../utils/time";
+import { formatLongDate } from "../utils/time";
+import { PostCard } from "./PostCard";
 import { sendFollow, sendUnfollow } from "./shared";
 
 interface ProfileUpdateResponse {
@@ -381,26 +382,15 @@ export function ProfilePanel({
           ) : null}
           <div className="card-list">
             {profile.posts.map((post) => (
-              <article className="content-card" key={post.id}>
-                <header>
-                  <span>#{post.channel}</span>
-                  <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
-                </header>
-                <p>{post.content}</p>
-                {post.image_url ? (
-                  <a href={post.image_url} rel="noreferrer" target="_blank">
-                    <img alt="Post attachment" className="content-image" src={post.image_url} />
-                  </a>
-                ) : null}
-                {post.video_url ? (
-                  <video
-                    className="content-video"
-                    controls
-                    preload="metadata"
-                    src={post.video_url}
-                  />
-                ) : null}
-              </article>
+              <PostCard
+                key={post.id}
+                channel={post.channel}
+                content={post.content}
+                createdAt={post.created_at}
+                imageUrl={post.image_url}
+                username={profile.user.username}
+                videoUrl={post.video_url}
+              />
             ))}
           </div>
 
@@ -412,26 +402,16 @@ export function ProfilePanel({
               ) : null}
               <div className="card-list">
                 {profile.saved_posts.map((post) => (
-                  <article className="content-card" key={`saved-${post.id}`}>
-                    <header>
-                      <span>#{post.channel}</span>
-                      <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
-                    </header>
-                    <p>{post.content}</p>
-                    {post.image_url ? (
-                      <a href={post.image_url} rel="noreferrer" target="_blank">
-                        <img alt="Saved post attachment" className="content-image" src={post.image_url} />
-                      </a>
-                    ) : null}
-                    {post.video_url ? (
-                      <video
-                        className="content-video"
-                        controls
-                        preload="metadata"
-                        src={post.video_url}
-                      />
-                    ) : null}
-                  </article>
+                  <PostCard
+                    key={`saved-${post.id}`}
+                    channel={post.channel}
+                    content={post.content}
+                    createdAt={post.created_at}
+                    imageAlt="Saved post attachment"
+                    imageUrl={post.image_url}
+                    username={profile.user.username}
+                    videoUrl={post.video_url}
+                  />
                 ))}
               </div>
             </>
