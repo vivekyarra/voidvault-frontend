@@ -1,9 +1,5 @@
 import { requestJson } from "../api";
 
-export function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString();
-}
-
 export async function sendFollow(userId: string): Promise<void> {
   await requestJson<{ success: boolean }>("/follow", {
     method: "POST",

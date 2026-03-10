@@ -18,7 +18,7 @@ import {
   ThumbDownIcon,
   ThumbUpIcon,
 } from "./icons";
-import { formatDateTime } from "./shared";
+import { formatRelativeTime } from "../utils/time";
 
 interface PostLookupResponse {
   post: FeedPost;
@@ -440,7 +440,7 @@ export function HomePanel({
                 @{post.username}
               </button>
               <span>#{post.channel}</span>
-              <time dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
+              <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
             </header>
             <p>{post.content}</p>
             {post.image_url ? (
@@ -556,7 +556,9 @@ export function HomePanel({
                       <article className="content-card" key={comment.id}>
                         <header>
                           <strong>@{comment.username}</strong>
-                          <time dateTime={comment.created_at}>{formatDateTime(comment.created_at)}</time>
+                          <time dateTime={comment.created_at}>
+                            {formatRelativeTime(comment.created_at)}
+                          </time>
                         </header>
                         <p>{comment.content}</p>
                       </article>

@@ -10,7 +10,7 @@ import type {
   SearchUser,
 } from "./types";
 import { ArrowLeftIcon } from "./icons";
-import { formatDateTime } from "./shared";
+import { formatRelativeTime } from "../utils/time";
 
 export function ChatPanel({
   currentUser,
@@ -235,7 +235,9 @@ export function ChatPanel({
             >
               <strong>@{conversation.other_user?.username ?? "unknown"}</strong>
               <span>{conversation.last_message?.content ?? "No messages yet."}</span>
-              <time dateTime={conversation.updated_at}>{formatDateTime(conversation.updated_at)}</time>
+              <time dateTime={conversation.updated_at}>
+                {formatRelativeTime(conversation.updated_at)}
+              </time>
             </button>
           ))}
         </aside>
@@ -293,7 +295,9 @@ export function ChatPanel({
                       }`}
                     >
                       <p>{message.content}</p>
-                      <time dateTime={message.created_at}>{formatDateTime(message.created_at)}</time>
+                      <time dateTime={message.created_at}>
+                        {formatRelativeTime(message.created_at)}
+                      </time>
                     </article>
                   ))
                 )}

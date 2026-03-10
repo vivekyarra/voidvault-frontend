@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { requestJson } from "../api";
 import type { SearchResponse } from "./types";
-import { formatDateTime, sendFollow, sendUnfollow } from "./shared";
+import { formatMonthDay, formatRelativeTime } from "../utils/time";
+import { sendFollow, sendUnfollow } from "./shared";
 
 export function SearchPanel({
   onOpenProfile,
@@ -83,7 +84,7 @@ export function SearchPanel({
                   >
                     @{user.username}
                   </button>
-                  <time dateTime={user.created_at}>{formatDateTime(user.created_at)}</time>
+                  <time dateTime={user.created_at}>{formatMonthDay(user.created_at)}</time>
                 </header>
                 <footer>
                   <button
@@ -114,7 +115,7 @@ export function SearchPanel({
                     @{post.username}
                   </button>
                   <span>#{post.channel}</span>
-                  <time dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
+                  <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
                 </header>
                 <p>{post.content}</p>
                 {post.image_url ? (

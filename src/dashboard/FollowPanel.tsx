@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { requestJson } from "../api";
 import type { FollowDataResponse } from "./types";
-import { formatDateTime, sendFollow, sendUnfollow } from "./shared";
+import { formatMonthDay } from "../utils/time";
+import { sendFollow, sendUnfollow } from "./shared";
 
 export function FollowPanel({
   onOpenChat,
@@ -103,7 +104,7 @@ export function FollowPanel({
                   >
                     @{user.username}
                   </button>
-                  <time dateTime={user.followed_at}>{formatDateTime(user.followed_at)}</time>
+                  <time dateTime={user.followed_at}>{formatMonthDay(user.followed_at)}</time>
                 </header>
                 <footer>
                   <button type="button" onClick={() => void handleFollow(user.id, true)}>

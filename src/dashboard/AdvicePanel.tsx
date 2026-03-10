@@ -6,7 +6,7 @@ import type {
   AdviceResponse,
   CurrentUser,
 } from "./types";
-import { formatDateTime } from "./shared";
+import { formatRelativeTime } from "../utils/time";
 
 interface ReplyDraftMap {
   [adviceId: string]: string;
@@ -188,7 +188,7 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
             <header>
               <strong>Anonymous</strong>
               <span>{advice.reply_count} replies</span>
-              <time dateTime={advice.created_at}>{formatDateTime(advice.created_at)}</time>
+              <time dateTime={advice.created_at}>{formatRelativeTime(advice.created_at)}</time>
             </header>
             <p>{advice.content}</p>
 
@@ -227,7 +227,7 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
                         {reply.user_id === currentUser.id ? "You" : `@${reply.username}`}
                       </strong>
                       <time dateTime={reply.created_at}>
-                        {formatDateTime(reply.created_at)}
+                        {formatRelativeTime(reply.created_at)}
                       </time>
                     </header>
                     <p>{reply.content}</p>

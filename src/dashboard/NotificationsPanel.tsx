@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { requestJson } from "../api";
 import type { NotificationItem, NotificationsResponse } from "./types";
-import { formatDateTime } from "./shared";
+import { formatRelativeTime } from "../utils/time";
 
 export function NotificationsPanel() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -48,7 +48,7 @@ export function NotificationsPanel() {
           <article className="content-card" key={item.id}>
             <header>
               <strong>{item.title}</strong>
-              <time dateTime={item.created_at}>{formatDateTime(item.created_at)}</time>
+              <time dateTime={item.created_at}>{formatRelativeTime(item.created_at)}</time>
             </header>
             <p>{item.body}</p>
           </article>

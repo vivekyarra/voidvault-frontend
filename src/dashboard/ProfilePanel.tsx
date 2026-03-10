@@ -10,7 +10,8 @@ import { requestJson } from "../api";
 import type { CurrentUser, ProfileResponse } from "./types";
 import { LogoutIcon, PencilIcon } from "./icons";
 import { uploadProfileImage } from "./mediaUpload";
-import { formatDateTime, sendFollow, sendUnfollow } from "./shared";
+import { formatLongDate, formatRelativeTime } from "../utils/time";
+import { sendFollow, sendUnfollow } from "./shared";
 
 interface ProfileUpdateResponse {
   user: {
@@ -276,7 +277,7 @@ export function ProfilePanel({
               <strong>@{profile.user.username}</strong>
               <span>Trust: {profile.user.trust_score}</span>
             </header>
-            <p>Joined: {formatDateTime(profile.user.created_at)}</p>
+            <p>Joined: {formatLongDate(profile.user.created_at)}</p>
             {profile.user.bio ? <p>{profile.user.bio}</p> : null}
             <p>
               {profile.stats.posts} posts | {profile.stats.followers} followers | {" "}
@@ -383,7 +384,7 @@ export function ProfilePanel({
               <article className="content-card" key={post.id}>
                 <header>
                   <span>#{post.channel}</span>
-                  <time dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
+                  <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
                 </header>
                 <p>{post.content}</p>
                 {post.image_url ? (
@@ -414,7 +415,7 @@ export function ProfilePanel({
                   <article className="content-card" key={`saved-${post.id}`}>
                     <header>
                       <span>#{post.channel}</span>
-                      <time dateTime={post.created_at}>{formatDateTime(post.created_at)}</time>
+                      <time dateTime={post.created_at}>{formatRelativeTime(post.created_at)}</time>
                     </header>
                     <p>{post.content}</p>
                     {post.image_url ? (
