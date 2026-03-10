@@ -98,6 +98,15 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+export function RefreshIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M20 11a8 8 0 1 0 2 5.3" />
+      <path d="M20 4v7h-7" />
+    </IconBase>
+  );
+}
+
 export function ThumbUpIcon(props: IconProps) {
   return (
     <IconBase {...props}>

@@ -1,6 +1,7 @@
 import { type FormEvent, type KeyboardEvent, useEffect, useState } from "react";
 import { persistSessionToken, requestJson } from "./api";
 import { AdminPanel } from "./admin/AdminPanel";
+import { RefreshIcon } from "./dashboard/icons";
 import { Dashboard } from "./dashboard/Dashboard";
 import type { CurrentUser } from "./dashboard/types";
 import { PrivacyPage, TermsPage } from "./legalPages";
@@ -50,6 +51,31 @@ function navigate(path: RoutePath) {
   if (window.location.pathname !== path) {
     window.history.pushState({}, "", path);
   }
+}
+
+function hasLoggedOutNotice(): boolean {
+  return new URLSearchParams(window.location.search).has("logged_out");
+}
+
+function clearAuthNotice() {
+  if (window.location.pathname !== "/") {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  params.delete("logged_out");
+  const query = params.toString();
+  window.history.replaceState({}, "", query ? `/?${query}` : "/");
+}
+
+function setLoggedOutNotice() {
+  if (window.location.pathname !== "/") {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  params.set("logged_out", "1");
+  window.history.replaceState({}, "", `/?${params.toString()}`);
 }
 
 export default function App() {
@@ -111,7 +137,8 @@ export default function App() {
           },
         });
         persistSessionToken(response.session_token ?? null);
-        setStatus("Account created.");
+        clearAuthNotice();
+        setStatus("");
         const me = await requestJson<CurrentUser>("/me", { method: "GET" });
         setCurrentUser(me);
       } else {
@@ -123,7 +150,8 @@ export default function App() {
           },
         });
         persistSessionToken(response.session_token ?? null);
-        setStatus("Signed in successfully.");
+        clearAuthNotice();
+        setStatus("");
         const me = await requestJson<CurrentUser>("/me", { method: "GET" });
         setCurrentUser(me);
       }
@@ -137,8 +165,11 @@ export default function App() {
   async function handleLogout() {
     await requestJson<{ success: boolean }>("/logout", { method: "POST" });
     persistSessionToken(null);
+    setLoggedOutNotice();
     setCurrentUser(null);
-    setStatus("Logged out.");
+    setUsername("");
+    setPassword("");
+    setStatus("");
   }
 
   async function handleGenerateUsername() {
@@ -192,40 +223,119 @@ export default function App() {
     return (
       <main className="auth-page">
         <section className="auth-layout">
+          <aside className="brand-panel">
+            <div className="auth-brandbar">
+              <img alt="VoidVault" className="auth-brand-mark" src="/voidvault-logo.svg" />
+              <span>VOIDVAULT</span>
+            </div>
+          </aside>
           <section className="form-panel">
-            <h1>VoidVault</h1>
-            <h2>Loading session...</h2>
+            <div className="auth-form-copy">
+              <p className="ui-kicker">Session</p>
+              <h1 className="ui-display">LOADING.</h1>
+              <p>Checking your account state.</p>
+            </div>
           </section>
         </section>
       </main>
     );
   }
 
+  const showLoggedOutNotice = hasLoggedOutNotice();
+
   return (
     <main className="auth-page">
       <section className="auth-layout">
         <aside className="brand-panel">
-          <div aria-hidden="true" className="vault-logo">
-            <span>V</span>
-            <span className="upward-v">V</span>
+          <div className="auth-brandbar">
+            <img alt="VoidVault" className="auth-brand-mark" src="/voidvault-logo.svg" />
+            <span>VOIDVAULT</span>
           </div>
-          <p className="brand-subline">
-            Post, connect, and message anonymously in a secure network without
-            sacrificing privacy.
-          </p>
+
+          <div className="brand-panel-main">
+            <img
+              alt="VoidVault"
+              className="brand-hero-mark"
+              src="/voidvault-logo.svg"
+            />
+            <div className="brand-copy">
+              <h1 className="auth-hero-heading">
+                <span>THE PRIVATE</span>
+                <span>SOCIAL.</span>
+              </h1>
+              <p className="auth-hero-subtext">
+                No email. No phone. No real name. Just a username and password and
+                you&apos;re in.
+              </p>
+            </div>
+            <ul className="brand-proof-list">
+              <li>No personal data collected</li>
+              <li>No ads, no tracking, no selling</li>
+              <li>Delete your account instantly, anytime</li>
+            </ul>
+          </div>
+
+          <footer className="brand-panel-footer">
+            <span>&copy; 2026 VoidVault</span>
+            <div className="brand-footer-links">
+              <button type="button" onClick={() => handleNavigate("/privacy")}>
+                Privacy Policy
+              </button>
+              <span>&middot;</span>
+              <button type="button" onClick={() => handleNavigate("/terms")}>
+                Terms
+              </button>
+            </div>
+          </footer>
         </aside>
 
         <section className="form-panel">
-          <h1>Happening now</h1>
-          <h2>{authMode === "signup" ? "Join today." : "Sign in."}</h2>
+          <div className="auth-mode-switch" role="tablist" aria-label="Authentication mode">
+            <button
+              aria-selected={authMode === "signup"}
+              className={authMode === "signup" ? "active" : ""}
+              type="button"
+              onClick={() => {
+                setAuthMode("signup");
+                setStatus("");
+              }}
+            >
+              Sign up
+            </button>
+            <button
+              aria-selected={authMode === "login"}
+              className={authMode === "login" ? "active" : ""}
+              type="button"
+              onClick={() => {
+                setAuthMode("login");
+                setStatus("");
+              }}
+            >
+              Login
+            </button>
+          </div>
+
+          <div className="auth-form-copy">
+            <p className="ui-kicker">{authMode === "signup" ? "Create Account" : "Access"}</p>
+            <h1 className="ui-display">
+              {authMode === "signup" ? "JOIN TODAY." : "WELCOME BACK."}
+            </h1>
+            <p>
+              {authMode === "signup"
+                ? "No personal info needed. Just pick a name."
+                : "Your username is your only identity here."}
+            </p>
+          </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
-            <label>
-              <span>Enter username</span>
+            <label className="auth-field">
+              <span>Username</span>
               <input
                 autoComplete="username"
+                className="field-input"
                 maxLength={20}
                 minLength={3}
+                placeholder="@username"
                 required
                 type="text"
                 value={username}
@@ -247,19 +357,22 @@ export default function App() {
                   }}
                   onKeyDown={handleUsernameSuggestKeydown}
                 >
+                  <RefreshIcon />
                   {isGeneratingUsername
                     ? "Generating username..."
-                    : "Auto generate random username?"}
+                    : "Auto-generate username"}
                 </span>
               </p>
             ) : null}
 
-            <label>
-              <span>Enter password</span>
+            <label className="auth-field">
+              <span>Password</span>
               <input
                 autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                className="field-input"
                 maxLength={128}
                 minLength={8}
+                placeholder={authMode === "signup" ? "Create a strong password" : "Enter password"}
                 required
                 type="password"
                 value={password}
@@ -267,62 +380,59 @@ export default function App() {
               />
             </label>
 
-            <button disabled={isSubmitting} type="submit">
-              {isSubmitting
-                ? "Please wait..."
-                : authMode === "signup"
-                  ? "Create account"
-                  : "Sign in"}
-            </button>
+            <div className="auth-form-actions">
+              <button className="btn-primary" disabled={isSubmitting} type="submit">
+                {isSubmitting
+                  ? "Please wait..."
+                  : authMode === "signup"
+                    ? "Create account"
+                    : "Sign in"}
+              </button>
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={() => {
+                  setAuthMode((previous) =>
+                    previous === "signup" ? "login" : "signup",
+                  );
+                  setStatus("");
+                }}
+              >
+                {authMode === "signup"
+                  ? "Already have an account?"
+                  : "New here? Create an account"}
+              </button>
+            </div>
           </form>
 
-          <p className="agreement-text">
-            By continuing, you agree to the{" "}
-            <button type="button" onClick={() => handleNavigate("/terms")}>
-              Terms of Service
-            </button>{" "}
-            and{" "}
-            <button type="button" onClick={() => handleNavigate("/privacy")}>
-              Privacy Policy
-            </button>
-            , including Cookie Use.
+          <div className="auth-status-stack">
+            {showLoggedOutNotice ? (
+              <p className="ui-status auth-notice">You were signed out securely.</p>
+            ) : null}
+            {status ? <p className="ui-status">{status}</p> : null}
+          </div>
+
+          <p className="auth-form-footer">
+            {authMode === "signup" ? (
+              <>
+                By continuing you agree to our{" "}
+                <button type="button" onClick={() => handleNavigate("/privacy")}>
+                  Privacy Policy
+                </button>{" "}
+                and{" "}
+                <button type="button" onClick={() => handleNavigate("/terms")}>
+                  Terms
+                </button>
+                .
+              </>
+            ) : (
+              <>
+                Forgot your password? You&apos;ll need to create a new account.
+              </>
+            )}
           </p>
-
-          <button
-            className="toggle-mode"
-            type="button"
-            onClick={() => {
-              setAuthMode((previous) =>
-                previous === "signup" ? "login" : "signup",
-              );
-              setStatus("");
-            }}
-          >
-            {authMode === "signup"
-              ? "Already have an account?"
-              : "Need a new account?"}
-          </button>
-
-          {status ? <p className="status-text">{status}</p> : null}
         </section>
       </section>
-
-      <footer className="site-footer">
-        <button type="button" onClick={() => handleNavigate("/terms")}>
-          Terms of Service
-        </button>
-        <button type="button" onClick={() => handleNavigate("/privacy")}>
-          Privacy Policy, including Cookie Use
-        </button>
-        <a
-          href="https://yarra-vivek-portfolio.vivekyarra567.workers.dev/"
-          rel="noreferrer"
-          target="_blank"
-        >
-          Founder
-        </a>
-        <span>(c) 2026 voidvaultcorp</span>
-      </footer>
     </main>
   );
 }
