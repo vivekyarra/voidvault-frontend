@@ -9,7 +9,7 @@ import type {
   SearchResponse,
   SearchUser,
 } from "./types";
-import { ArrowLeftIcon } from "./icons";
+import { ArrowLeftIcon, PaperPlaneIcon } from "./icons";
 import { formatRelativeTime } from "../utils/time";
 
 export function ChatPanel({
@@ -185,136 +185,170 @@ export function ChatPanel({
   const showConversationThread = !isMobileView || mobileThreadOpen;
 
   return (
-    <section className="dashboard-panel chat-layout">
-      <header className="panel-header">
-        <h2>Chat</h2>
-      </header>
-
-      {status ? <p className="panel-status">{status}</p> : null}
+    <section className="page-section chat-layout">
+      {status ? <p className="ui-status">{status}</p> : null}
       {isLoading ? <p className="empty-state">Loading chats...</p> : null}
 
       <div className="chat-grid">
         {showConversationList ? (
-        <aside className="chat-list">
-          <div className="search-form chat-search-form">
-            <input
-              placeholder="Search users to chat"
-              value={chatSearchQuery}
-              onChange={(event) => setChatSearchQuery(event.target.value)}
-            />
-          </div>
+          <aside className="chat-sidebar">
+            <div className="chat-sidebar-search">
+              <input
+                className="field-input"
+                placeholder="Search conversations..."
+                value={chatSearchQuery}
+                onChange={(event) => setChatSearchQuery(event.target.value)}
+              />
+            </div>
 
-          {isSearchingUsers ? <p className="empty-state">Searching users...</p> : null}
+            <div className="chat-sidebar-scroll">
+              {isSearchingUsers ? <p className="empty-state">Searching users...</p> : null}
 
-          {chatSearchResults.map((user) => (
-            <button
-              key={`search-${user.id}`}
-              className="chat-list-item"
-              type="button"
-              onClick={() => void startChat(user.id)}
-            >
-              <strong>@{user.username}</strong>
-              <span>Start conversation</span>
-            </button>
-          ))}
+              {chatSearchResults.map((user) => (
+                <button
+                  key={`search-${user.id}`}
+                  className="chat-list-item"
+                  type="button"
+                  onClick={() => void startChat(user.id)}
+                >
+                  <div className="chat-avatar" aria-hidden="true">
+                    {user.username.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="chat-list-copy">
+                    <div className="chat-list-top">
+                      <strong>@{user.username}</strong>
+                    </div>
+                    <span className="chat-list-preview">Start conversation</span>
+                  </div>
+                </button>
+              ))}
 
-          {conversations.length === 0 ? <p className="empty-state">No chats yet.</p> : null}
-          {conversations.map((conversation) => (
-            <button
-              key={conversation.conversation_id}
-              className={`chat-list-item ${
-                activeConversationId === conversation.conversation_id ? "active" : ""
-              }`}
-              type="button"
-              onClick={() => {
-                setActiveConversationId(conversation.conversation_id);
-                if (isMobileView) {
-                  setMobileThreadOpen(true);
-                }
-              }}
-            >
-              <strong>@{conversation.other_user?.username ?? "unknown"}</strong>
-              <span>{conversation.last_message?.content ?? "No messages yet."}</span>
-              <time dateTime={conversation.updated_at}>
-                {formatRelativeTime(conversation.updated_at)}
-              </time>
-            </button>
-          ))}
-        </aside>
+              {conversations.length === 0 ? <p className="empty-state">No chats yet.</p> : null}
+              {conversations.map((conversation) => (
+                <button
+                  key={conversation.conversation_id}
+                  className={`chat-list-item ${
+                    activeConversationId === conversation.conversation_id ? "active" : ""
+                  }`}
+                  type="button"
+                  onClick={() => {
+                    setActiveConversationId(conversation.conversation_id);
+                    if (isMobileView) {
+                      setMobileThreadOpen(true);
+                    }
+                  }}
+                >
+                  <div className="chat-avatar" aria-hidden="true">
+                    {(conversation.other_user?.username ?? "u").slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="chat-list-copy">
+                    <div className="chat-list-top">
+                      <strong>@{conversation.other_user?.username ?? "unknown"}</strong>
+                      <time dateTime={conversation.updated_at}>
+                        {formatRelativeTime(conversation.updated_at)}
+                      </time>
+                    </div>
+                    <span className="chat-list-preview">
+                      {conversation.last_message?.content ?? "No messages yet."}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </aside>
         ) : null}
 
         {showConversationThread ? (
-        <section className="chat-thread">
-          {!activeConversation ? (
-            <p className="empty-state">Select a conversation to start chatting.</p>
-          ) : (
-            <>
-              <header className="chat-thread-header">
-                {isMobileView ? (
-                  <button
-                    aria-label="Back to chats"
-                    className="chat-back-btn"
-                    type="button"
-                    onClick={() => setMobileThreadOpen(false)}
-                  >
-                    <ArrowLeftIcon />
-                  </button>
-                ) : null}
-                <button
-                  className="inline-link"
-                  type="button"
-                  onClick={() =>
-                    activeConversation.other_user
-                      ? onOpenProfile(activeConversation.other_user.id)
-                      : null
-                  }
-                >
-                  @{activeConversation.other_user?.username ?? "unknown"}
-                </button>
-              </header>
-
-              {messagesNextCursor ? (
-                <button
-                  className="secondary-btn"
-                  type="button"
-                  onClick={() => void loadMessages(activeConversation.conversation_id, messagesNextCursor, true)}
-                >
-                  Load older messages
-                </button>
-              ) : null}
-
-              <div className="message-list">
-                {messages.length === 0 ? (
-                  <p className="empty-state">No messages yet.</p>
-                ) : (
-                  messages.map((message) => (
-                    <article
-                      key={message.id}
-                      className={`message-item ${
-                        message.sender_id === currentUser.id ? "mine" : "theirs"
-                      }`}
-                    >
-                      <p>{message.content}</p>
-                      <time dateTime={message.created_at}>
-                        {formatRelativeTime(message.created_at)}
-                      </time>
-                    </article>
-                  ))
-                )}
+          <section className="chat-thread">
+            {!activeConversation ? (
+              <div className="chat-empty-state">
+                <img alt="VoidVault" src="/voidvault-logo.svg" />
+                <h2 className="ui-display">SELECT A CONVERSATION</h2>
+                <p>Or start a new one from Search.</p>
               </div>
+            ) : (
+              <>
+                <header className="chat-thread-header">
+                  {isMobileView ? (
+                    <button
+                      aria-label="Back to chats"
+                      className="chat-back-btn"
+                      type="button"
+                      onClick={() => setMobileThreadOpen(false)}
+                    >
+                      <ArrowLeftIcon />
+                    </button>
+                  ) : null}
+                  <button
+                    className="chat-thread-user"
+                    type="button"
+                    onClick={() =>
+                      activeConversation.other_user
+                        ? onOpenProfile(activeConversation.other_user.id)
+                        : null
+                    }
+                  >
+                    @{activeConversation.other_user?.username ?? "unknown"}
+                  </button>
+                </header>
 
-              <form className="message-form" onSubmit={handleSendMessage}>
-                <input
-                  maxLength={2000}
-                  placeholder="Type a message"
-                  value={draft}
-                  onChange={(event) => setDraft(event.target.value)}
-                />
-                <button type="submit">Send</button>
-              </form>
-            </>
-          )}
-        </section>
+                <div className="chat-thread-body">
+                  {messagesNextCursor ? (
+                    <button
+                      className="chat-load-more"
+                      type="button"
+                      onClick={() =>
+                        void loadMessages(
+                          activeConversation.conversation_id,
+                          messagesNextCursor,
+                          true,
+                        )
+                      }
+                    >
+                      Load older messages
+                    </button>
+                  ) : null}
+
+                  <div className="message-list">
+                    {messages.length === 0 ? (
+                      <p className="empty-state">No messages yet.</p>
+                    ) : (
+                      messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`message-row ${
+                            message.sender_id === currentUser.id ? "mine" : "theirs"
+                          }`}
+                        >
+                          <article className="message-bubble">
+                            <p>{message.content}</p>
+                          </article>
+                          <time className="message-time" dateTime={message.created_at}>
+                            {formatRelativeTime(message.created_at)}
+                          </time>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <form className="message-form" onSubmit={handleSendMessage}>
+                  <input
+                    className="field-input chat-message-input"
+                    maxLength={2000}
+                    placeholder={`Message @${
+                      activeConversation.other_user?.username ?? "user"
+                    }...`}
+                    value={draft}
+                    onChange={(event) => setDraft(event.target.value)}
+                  />
+                  <button className="chat-send-btn" type="submit">
+                    <PaperPlaneIcon />
+                  </button>
+                </form>
+              </>
+            )}
+          </section>
         ) : null}
       </div>
     </section>
