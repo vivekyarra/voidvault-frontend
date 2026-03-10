@@ -1,5 +1,6 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { requestJson } from "../api";
+import { RazorVLogo } from "../brand/RazorVLogo";
 import type {
   ChatConversation,
   ChatListResponse,
@@ -262,9 +263,9 @@ export function ChatPanel({
           <section className="chat-thread">
             {!activeConversation ? (
               <div className="chat-empty-state">
-                <img alt="VoidVault" src="/voidvault-logo.svg" />
+                <RazorVLogo aria-hidden="true" />
                 <h2 className="ui-display">SELECT A CONVERSATION</h2>
-                <p>Or start a new one from Search.</p>
+                <p>Or search for someone to message.</p>
               </div>
             ) : (
               <>

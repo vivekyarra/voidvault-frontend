@@ -149,14 +149,14 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
             type="button"
             onClick={() => setMode("need")}
           >
-            Need Advice
+            Ask
           </button>
           <button
             className={mode === "give" ? "btn-primary" : "btn-secondary"}
             type="button"
             onClick={() => setMode("give")}
           >
-            Give Advice
+            Answer
           </button>
         </div>
       </div>

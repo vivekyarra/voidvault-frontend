@@ -89,6 +89,25 @@ export function ProfileIcon(props: IconProps) {
   );
 }
 
+export function AtIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="12" cy="12" r="7" />
+      <path d="M15.5 15.5V9.8a2.8 2.8 0 1 0-2.2 2.7" />
+      <path d="M15.5 12a2.5 2.5 0 0 0 5 0c0-4.7-3.8-8.5-8.5-8.5S3.5 7.3 3.5 12 7.3 20.5 12 20.5c1.8 0 3.3-.4 4.7-1.3" />
+    </IconBase>
+  );
+}
+
+export function LockIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 1 1 8 0v3" />
+    </IconBase>
+  );
+}
+
 export function PlusIcon(props: IconProps) {
   return (
     <IconBase {...props}>
@@ -204,6 +223,16 @@ export function XIcon(props: IconProps) {
     <IconBase {...props}>
       <path d="M6 6 18 18" />
       <path d="M18 6 6 18" />
+    </IconBase>
+  );
+}
+
+export function MoreHorizontalIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <circle cx="6" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="18" cy="12" r="1.4" fill="currentColor" stroke="none" />
     </IconBase>
   );
 }

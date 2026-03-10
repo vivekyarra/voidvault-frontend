@@ -147,6 +147,7 @@ export function Dashboard({
               currentUser={currentUser}
               focusedPostId={focusedPostId}
               refreshNonce={feedRefreshNonce}
+              onOpenFollow={() => setActiveTab("follow")}
               onOpenProfile={openProfile}
             />
           ) : null}

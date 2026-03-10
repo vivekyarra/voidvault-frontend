@@ -293,9 +293,7 @@ export function ProfilePanel({
               <div className="profile-identity">
                 <div className="profile-identity-row">
                   <h2>@{profile.user.username}</h2>
-                  <span className="profile-trust-pill">
-                    Trust score: {profile.user.trust_score}
-                  </span>
+                  <span className="profile-trust-pill">Trust: {profile.user.trust_score}</span>
                 </div>
                 <p className="profile-joined">Joined {formatLongDate(profile.user.created_at)}</p>
                 {profile.user.bio ? <p className="profile-bio">{profile.user.bio}</p> : null}
@@ -424,7 +422,7 @@ export function ProfilePanel({
 
                   {showDeleteConfirmation ? (
                     <div className="profile-delete-confirmation">
-                      <p>Are you sure? This is permanent.</p>
+                      <p>Are you sure? This cannot be undone.</p>
                       <div className="profile-delete-actions">
                         <button className="btn-ghost" type="button" onClick={() => setShowDeleteConfirmation(false)}>
                           Cancel
@@ -447,7 +445,7 @@ export function ProfilePanel({
 
           <section className="profile-posts-section">
             <h2 className="results-title">
-              {profile.stats.is_self ? "Your Posts" : "Posts"}
+              {profile.stats.is_self ? "YOUR POSTS" : "POSTS"}
             </h2>
             {profile.posts.length === 0 ? (
               <p className="empty-state">No content uploaded yet.</p>

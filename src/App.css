@@ -8,27 +8,32 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 460px;
+  position: relative;
+}
+
+.auth-layout::after {
+  content: "";
+  position: absolute;
+  top: 48px;
+  bottom: 48px;
+  left: calc(100% - 460px);
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.12) 14%,
+    rgba(255, 255, 255, 0.12) 86%,
+    transparent
+  );
+  pointer-events: none;
 }
 
 .brand-panel {
   position: relative;
-  padding: 40px 48px 34px;
+  padding: 48px 64px;
   background: var(--bg-void);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  overflow: hidden;
-}
-
-.brand-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    600px circle at -100px -100px,
-    rgba(255, 255, 255, 0.025) 0%,
-    transparent 60%
-  );
-  pointer-events: none;
 }
 
 .auth-brandbar,
@@ -41,19 +46,19 @@
 .auth-brandbar {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .auth-brandbar span {
   font-family: "Bebas Neue", sans-serif;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   letter-spacing: 0.1em;
   color: var(--text-primary);
 }
 
 .auth-brand-mark {
-  width: 44px;
-  height: 44px;
+  width: 28px;
+  height: 23px;
   display: block;
   flex-shrink: 0;
 }
@@ -63,40 +68,40 @@
 }
 
 .brand-panel-main {
-  width: min(100%, 680px);
-  margin: 0 auto;
+  width: min(100%, 360px);
+  margin: 0;
   display: grid;
   align-content: center;
   justify-items: start;
-  gap: 24px;
+  gap: 26px;
 }
 
 .brand-hero-mark {
-  width: min(220px, 32vw);
-  min-width: 120px;
+  width: 160px;
+  height: 130px;
   display: block;
 }
 
 .brand-copy {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .auth-hero-heading {
   margin: 0;
   display: grid;
-  gap: 2px;
+  gap: 4px;
   font-family: "Bebas Neue", sans-serif;
-  font-size: clamp(3.5rem, 5vw, 5.5rem);
-  line-height: 0.92;
+  font-size: clamp(3rem, 4.5vw, 4.8rem);
+  line-height: 0.93;
   letter-spacing: 0.04em;
 }
 
 .auth-hero-subtext {
-  max-width: 380px;
+  max-width: 340px;
   margin: 0;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: 0.97rem;
   font-weight: 300;
   line-height: 1.65;
 }
@@ -105,15 +110,21 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 12px;
+  gap: 9px;
   list-style: none;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 400;
 }
 
 .brand-proof-list li::before {
-  content: "- ";
+  content: "";
+  width: 16px;
+  height: 1px;
+  background: var(--text-primary);
+  display: inline-block;
+  margin-right: 12px;
+  transform: translateY(-0.2em);
 }
 
 .brand-panel-footer {
@@ -122,8 +133,8 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  color: var(--text-muted);
-  font-size: 0.72rem;
+  color: var(--text-4);
+  font-size: 0.7rem;
   font-weight: 300;
 }
 
@@ -149,12 +160,12 @@
 .form-panel {
   width: 100%;
   background: var(--bg-deep);
-  border-left: 1px solid var(--border-subtle);
-  padding: 64px 52px;
+  padding: 52px 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 24px;
+  overflow-y: auto;
 }
 
 .auth-mode-switch {
@@ -187,11 +198,18 @@
 
 .auth-form-copy {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .auth-form-copy .ui-display {
-  font-size: 2.4rem;
+  font-size: 2.3rem;
+}
+
+.auth-eyebrow {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
 }
 
 .auth-form-copy p:last-child {
@@ -210,6 +228,32 @@
 .auth-field {
   display: grid;
   gap: 8px;
+}
+
+.auth-input-shell {
+  position: relative;
+}
+
+.auth-field-icon {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.auth-field-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.auth-field-input {
+  padding-left: 44px;
 }
 
 .auth-field span {
@@ -257,7 +301,6 @@
 .auth-form-actions .btn-primary,
 .auth-form-actions .btn-secondary {
   width: 100%;
-  min-height: 50px;
 }
 
 .auth-form-actions .btn-primary:disabled,
@@ -309,6 +352,24 @@
   margin: 0 auto 20px;
   display: grid;
   gap: 10px;
+}
+
+.legal-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legal-brand span {
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+}
+
+.legal-brand-mark {
+  width: 28px;
+  height: 23px;
+  display: block;
 }
 
 .legal-header h1 {
@@ -401,14 +462,17 @@
     grid-template-columns: 1fr;
   }
 
+  .auth-layout::after {
+    display: none;
+  }
+
   .brand-panel {
     display: none;
   }
 
   .form-panel {
     min-height: 100vh;
-    border-left: 0;
-    padding: 32px 24px max(48px, calc(48px + env(safe-area-inset-bottom)));
+    padding: 48px 24px max(32px, env(safe-area-inset-bottom));
     justify-content: flex-start;
   }
 
@@ -416,20 +480,20 @@
     display: grid;
     justify-items: center;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 32px;
     text-align: center;
   }
 
   .auth-mobile-brand span {
     font-family: "Bebas Neue", sans-serif;
-    font-size: 1.2rem;
-    letter-spacing: 0.1em;
+    font-size: 1.1rem;
+    letter-spacing: 0.14em;
     color: var(--text-primary);
   }
 
   .auth-mobile-brand-mark {
-    width: 64px;
-    height: 64px;
+    width: 40px;
+    height: 33px;
     display: block;
   }
 
@@ -437,15 +501,16 @@
     width: 100%;
   }
 
-  .auth-mode-switch button,
-  .auth-form .field-input,
-  .auth-form-actions .btn-primary,
-  .auth-form-actions .btn-secondary {
-    min-height: 52px;
+  .auth-mode-switch button {
+    min-height: 48px;
   }
 
-  .auth-form .field-input {
-    font-size: 1rem;
+  .auth-form-copy .ui-display {
+    font-size: 2.2rem;
+  }
+
+  .auth-field-input {
+    min-height: 52px;
   }
 
   .auth-form-footer {

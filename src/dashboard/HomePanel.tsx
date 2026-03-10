@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { requestJson } from "../api";
+import { RazorVLogo } from "../brand/RazorVLogo";
 import type {
   CurrentUser,
   FeedPost,
@@ -48,11 +49,13 @@ export function HomePanel({
   currentUser,
   focusedPostId,
   refreshNonce,
+  onOpenFollow,
   onOpenProfile,
 }: {
   currentUser: CurrentUser;
   focusedPostId: string | null;
   refreshNonce: number;
+  onOpenFollow: () => void;
   onOpenProfile: (userId: string) => void;
 }) {
   const [posts, setPosts] = useState<FeedPost[]>([]);
@@ -424,10 +427,22 @@ export function HomePanel({
       {isLoading ? <p className="empty-state feed-empty-state">Loading feed...</p> : null}
 
       {!isLoading && combinedPosts.length === 0 ? (
-        <div className="ui-empty">
-          <h2 className="ui-display">NO POSTS YET.</h2>
-          <p>Your feed will populate once people start posting.</p>
-        </div>
+        followingOnly ? (
+          <div className="ui-empty">
+            <RazorVLogo aria-hidden="true" className="ui-empty-brand" />
+            <h2 className="ui-display">Nothing here yet</h2>
+            <p>Follow people to see their posts here.</p>
+            <button className="btn-secondary" type="button" onClick={onOpenFollow}>
+              Find people to follow
+            </button>
+          </div>
+        ) : (
+          <div className="ui-empty">
+            <RazorVLogo aria-hidden="true" className="ui-empty-brand" />
+            <h2 className="ui-display">NO POSTS YET.</h2>
+            <p>Your feed will populate once people start posting.</p>
+          </div>
+        )
       ) : null}
 
       <div className="card-list">

@@ -77,7 +77,12 @@ export function SearchPanel({
         <>
           <div className="results-section">
             <h2 className="results-title">Users</h2>
-          {result.users.length === 0 ? <p className="empty-state">No users found.</p> : null}
+          {result.users.length === 0 ? (
+            <div className="ui-empty search-empty-state">
+              <h2 className="ui-display">No results</h2>
+              <p>Try a different username.</p>
+            </div>
+          ) : null}
           <div className="user-card-list">
             {result.users.map((user) => (
               <article className="user-card" key={user.id}>

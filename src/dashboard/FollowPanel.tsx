@@ -70,8 +70,8 @@ export function FollowPanel({
           <h2 className="results-title">Suggestions</h2>
           {data.suggestions.length === 0 ? (
             <div className="ui-empty">
-              <h2 className="ui-display">ALL CAUGHT UP</h2>
-              <p>You&apos;re following everyone available right now.</p>
+              <h2 className="ui-display">All caught up</h2>
+              <p>You&apos;re following everyone here.</p>
             </div>
           ) : null}
           <div className="user-card-list">
@@ -89,7 +89,7 @@ export function FollowPanel({
                     >
                       @{user.username}
                     </button>
-                    <span className="user-card-meta">Suggested for you</span>
+                    <span className="user-card-meta">People you might want to follow</span>
                   </div>
                 </div>
                 <div className="user-card-actions">

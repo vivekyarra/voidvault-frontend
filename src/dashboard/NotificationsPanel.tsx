@@ -84,8 +84,8 @@ export function NotificationsPanel() {
       {!isLoading && notifications.length === 0 ? (
         <div className="ui-empty notifications-empty-state">
           <BellIcon />
-          <h2 className="ui-display">NO NOTIFICATIONS YET</h2>
-          <p>When someone likes or follows you, it&apos;ll show up here.</p>
+          <h2 className="ui-display">No notifications yet</h2>
+          <p>Likes and follows will show up here.</p>
         </div>
       ) : null}
 

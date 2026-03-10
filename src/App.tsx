@@ -1,7 +1,8 @@
 import { type FormEvent, type KeyboardEvent, useEffect, useState } from "react";
 import { persistSessionToken, requestJson } from "./api";
 import { AdminPanel } from "./admin/AdminPanel";
-import { RefreshIcon } from "./dashboard/icons";
+import { RazorVLogo } from "./brand/RazorVLogo";
+import { AtIcon, LockIcon, RefreshIcon } from "./dashboard/icons";
 import { Dashboard } from "./dashboard/Dashboard";
 import type { CurrentUser } from "./dashboard/types";
 import { PrivacyPage, TermsPage } from "./legalPages";
@@ -225,13 +226,13 @@ export default function App() {
         <section className="auth-layout">
           <aside className="brand-panel">
             <div className="auth-brandbar">
-              <img alt="VoidVault" className="auth-brand-mark" src="/voidvault-logo.svg" />
+              <RazorVLogo aria-hidden="true" className="auth-brand-mark" />
               <span>VOIDVAULT</span>
             </div>
           </aside>
           <section className="form-panel">
             <div className="auth-mobile-brand">
-              <img alt="VoidVault" className="auth-mobile-brand-mark" src="/voidvault-logo.svg" />
+              <RazorVLogo aria-hidden="true" className="auth-mobile-brand-mark" />
               <span>VOIDVAULT</span>
             </div>
             <div className="auth-form-copy">
@@ -252,36 +253,34 @@ export default function App() {
       <section className="auth-layout">
         <aside className="brand-panel">
           <div className="auth-brandbar">
-            <img alt="VoidVault" className="auth-brand-mark" src="/voidvault-logo.svg" />
+            <RazorVLogo aria-hidden="true" className="auth-brand-mark" />
             <span>VOIDVAULT</span>
           </div>
 
           <div className="brand-panel-main">
-            <img
-              alt="VoidVault"
-              className="brand-hero-mark"
-              src="/voidvault-logo.svg"
-            />
+            <RazorVLogo aria-hidden="true" className="brand-hero-mark" />
             <div className="brand-copy">
               <h1 className="auth-hero-heading">
-                <span>THE PRIVATE</span>
-                <span>SOCIAL.</span>
+                <span>JUST</span>
+                <span>YOU.</span>
               </h1>
               <p className="auth-hero-subtext">
-                No email. No phone. No real name. Just a username and password and
-                you&apos;re in.
+                No email. No phone. No name.
+                <br />
+                A username and password - that&apos;s it.
               </p>
             </div>
             <ul className="brand-proof-list">
               <li>No personal data collected</li>
-              <li>No ads, no tracking, no selling</li>
-              <li>Delete your account instantly, anytime</li>
+              <li>No ads. No tracking. No selling.</li>
+              <li>Delete everything, instantly.</li>
             </ul>
           </div>
 
           <footer className="brand-panel-footer">
             <span>&copy; 2026 VoidVault</span>
             <div className="brand-footer-links">
+              <span>&middot;</span>
               <button type="button" onClick={() => handleNavigate("/privacy")}>
                 Privacy Policy
               </button>
@@ -295,7 +294,7 @@ export default function App() {
 
         <section className="form-panel">
           <div className="auth-mobile-brand">
-            <img alt="VoidVault" className="auth-mobile-brand-mark" src="/voidvault-logo.svg" />
+            <RazorVLogo aria-hidden="true" className="auth-mobile-brand-mark" />
             <span>VOIDVAULT</span>
           </div>
           <div className="auth-mode-switch" role="tablist" aria-label="Authentication mode">
@@ -324,7 +323,9 @@ export default function App() {
           </div>
 
           <div className="auth-form-copy">
-            <p className="ui-kicker">{authMode === "signup" ? "Create Account" : "Access"}</p>
+            <p className="ui-kicker auth-eyebrow">
+              {authMode === "signup" ? "New Account" : "Access"}
+            </p>
             <h1 className="ui-display">
               {authMode === "signup" ? "JOIN TODAY." : "WELCOME BACK."}
             </h1>
@@ -338,17 +339,22 @@ export default function App() {
           <form className="auth-form" onSubmit={handleSubmit}>
             <label className="auth-field">
               <span>Username</span>
-              <input
-                autoComplete="username"
-                className="field-input"
-                maxLength={20}
-                minLength={3}
-                placeholder="@username"
-                required
-                type="text"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-              />
+              <div className="auth-input-shell">
+                <span className="auth-field-icon" aria-hidden="true">
+                  <AtIcon />
+                </span>
+                <input
+                  autoComplete="username"
+                  className="field-input auth-field-input"
+                  maxLength={20}
+                  minLength={3}
+                  placeholder="@username"
+                  required
+                  type="text"
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                />
+              </div>
             </label>
 
             {authMode === "signup" ? (
@@ -375,17 +381,22 @@ export default function App() {
 
             <label className="auth-field">
               <span>Password</span>
-              <input
-                autoComplete={authMode === "signup" ? "new-password" : "current-password"}
-                className="field-input"
-                maxLength={128}
-                minLength={8}
-                placeholder={authMode === "signup" ? "Create a strong password" : "Enter password"}
-                required
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
+              <div className="auth-input-shell">
+                <span className="auth-field-icon" aria-hidden="true">
+                  <LockIcon />
+                </span>
+                <input
+                  autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                  className="field-input auth-field-input"
+                  maxLength={128}
+                  minLength={8}
+                  placeholder={authMode === "signup" ? "Create a strong password" : "Enter password"}
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </div>
             </label>
 
             <div className="auth-form-actions">

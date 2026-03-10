@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { RazorVLogo } from "../brand/RazorVLogo";
 import type { DashboardTab } from "./types";
 import {
   AdviceIcon,
@@ -6,6 +7,7 @@ import {
   ChatIcon,
   FollowIcon,
   HomeIcon,
+  MoreHorizontalIcon,
   PlusIcon,
   ProfileIcon,
   SearchIcon,
@@ -25,6 +27,17 @@ const DESKTOP_NAV_ITEMS: Array<{
   { id: "profile", label: "Profile", icon: <ProfileIcon /> },
 ];
 
+const MOBILE_MORE_ITEMS: Array<{
+  id: DashboardTab;
+  label: string;
+  icon: ReactNode;
+}> = [
+  { id: "notifications", label: "Notifications", icon: <BellIcon /> },
+  { id: "advice", label: "Advice", icon: <AdviceIcon /> },
+  { id: "follow", label: "Follow", icon: <FollowIcon /> },
+  { id: "profile", label: "Profile", icon: <ProfileIcon /> },
+];
+
 export function SideNav({
   activeTab,
   onSelectTab,
@@ -36,6 +49,15 @@ export function SideNav({
   onOpenComposer: () => void;
   showNotificationDot?: boolean;
 }) {
+  const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
+
+  const isMoreTabActive =
+    isMoreSheetOpen ||
+    activeTab === "notifications" ||
+    activeTab === "advice" ||
+    activeTab === "follow" ||
+    activeTab === "profile";
+
   return (
     <>
       <aside className="dashboard-sidebar">
@@ -44,11 +66,7 @@ export function SideNav({
           type="button"
           onClick={() => onSelectTab("home")}
         >
-          <img
-            alt="VoidVault"
-            className="dashboard-brand-mark"
-            src="/voidvault-logo.svg"
-          />
+          <RazorVLogo aria-hidden="true" className="dashboard-brand-mark" />
           <span className="dashboard-brand-wordmark">VOIDVAULT</span>
         </button>
         <nav className="dashboard-nav">
@@ -85,7 +103,10 @@ export function SideNav({
         <button
           className={`dashboard-mobile-tab ${activeTab === "home" ? "active" : ""}`}
           type="button"
-          onClick={() => onSelectTab("home")}
+          onClick={() => {
+            setIsMoreSheetOpen(false);
+            onSelectTab("home");
+          }}
         >
           <HomeIcon />
           <span>Home</span>
@@ -93,7 +114,10 @@ export function SideNav({
         <button
           className={`dashboard-mobile-tab ${activeTab === "search" ? "active" : ""}`}
           type="button"
-          onClick={() => onSelectTab("search")}
+          onClick={() => {
+            setIsMoreSheetOpen(false);
+            onSelectTab("search");
+          }}
         >
           <SearchIcon />
           <span>Search</span>
@@ -102,7 +126,10 @@ export function SideNav({
           aria-label="Create post"
           className="dashboard-mobile-post"
           type="button"
-          onClick={onOpenComposer}
+          onClick={() => {
+            setIsMoreSheetOpen(false);
+            onOpenComposer();
+          }}
         >
           <span className="dashboard-mobile-post-icon" aria-hidden="true">
             <PlusIcon />
@@ -110,29 +137,67 @@ export function SideNav({
           <span>Post</span>
         </button>
         <button
-          className={`dashboard-mobile-tab ${activeTab === "notifications" ? "active" : ""}`}
+          className={`dashboard-mobile-tab ${activeTab === "chat" ? "active" : ""}`}
           type="button"
-          onClick={() => onSelectTab("notifications")}
+          onClick={() => {
+            setIsMoreSheetOpen(false);
+            onSelectTab("chat");
+          }}
         >
-          <span
-            className={`dashboard-mobile-tab-icon ${
-              showNotificationDot ? "has-notification-dot" : ""
-            }`}
-          >
-            <BellIcon />
-            {showNotificationDot ? <span className="dashboard-nav-dot" /> : null}
-          </span>
-          <span>Notifications</span>
+          <ChatIcon />
+          <span>Chat</span>
         </button>
         <button
-          className={`dashboard-mobile-tab ${activeTab === "profile" ? "active" : ""}`}
+          aria-expanded={isMoreSheetOpen}
+          aria-haspopup="dialog"
+          className={`dashboard-mobile-tab ${isMoreTabActive ? "active" : ""}`}
           type="button"
-          onClick={() => onSelectTab("profile")}
+          onClick={() => setIsMoreSheetOpen((previous) => !previous)}
         >
-          <ProfileIcon />
-          <span>Profile</span>
+          <span className="dashboard-mobile-tab-icon">
+            <MoreHorizontalIcon />
+            {showNotificationDot ? <span className="dashboard-nav-dot" /> : null}
+          </span>
+          <span>More</span>
         </button>
       </nav>
+
+      {isMoreSheetOpen ? (
+        <>
+          <button
+            aria-label="Close more navigation"
+            className="dashboard-mobile-sheet-backdrop"
+            type="button"
+            onClick={() => setIsMoreSheetOpen(false)}
+          />
+          <section aria-label="More navigation" className="dashboard-mobile-sheet" role="dialog">
+            <div className="dashboard-mobile-sheet-handle" aria-hidden="true" />
+            <div className="dashboard-mobile-sheet-list">
+              {MOBILE_MORE_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  className={`dashboard-mobile-sheet-item ${
+                    activeTab === item.id ? "active" : ""
+                  }`}
+                  type="button"
+                  onClick={() => {
+                    setIsMoreSheetOpen(false);
+                    onSelectTab(item.id);
+                  }}
+                >
+                  <span className="dashboard-mobile-sheet-icon" aria-hidden="true">
+                    {item.icon}
+                    {item.id === "notifications" && showNotificationDot ? (
+                      <span className="dashboard-nav-dot" />
+                    ) : null}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : null}
     </>
   );
 }
