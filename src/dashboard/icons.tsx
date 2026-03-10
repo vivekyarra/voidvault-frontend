@@ -251,6 +251,14 @@ export function ArrowLeftIcon(props: IconProps) {
   );
 }
 
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </IconBase>
+  );
+}
+
 export function PencilIcon(props: IconProps) {
   return (
     <IconBase {...props}>

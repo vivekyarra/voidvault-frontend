@@ -482,6 +482,17 @@
   justify-content: flex-end;
 }
 
+.advice-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.advice-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .notification-list {
   display: grid;
   gap: 6px;
@@ -555,6 +566,118 @@
   width: 48px;
   height: 48px;
   color: var(--text-muted);
+}
+
+.advice-compose {
+  display: grid;
+  gap: 12px;
+}
+
+.advice-textarea,
+.advice-reply-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.advice-submit,
+.advice-reply-submit,
+.advice-load-more {
+  justify-self: end;
+}
+
+.advice-list {
+  display: grid;
+  gap: 10px;
+}
+
+.advice-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  padding: 18px 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.advice-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.advice-anon-pill {
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-pill);
+  background: var(--bg-card-2);
+  color: var(--text-muted);
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.advice-reply-count,
+.advice-time {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.advice-time {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 300;
+}
+
+.advice-content {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.advice-reply-composer {
+  display: grid;
+  gap: 10px;
+}
+
+.advice-card-footer {
+  display: flex;
+  align-items: center;
+}
+
+.advice-replies-toggle {
+  gap: 6px;
+}
+
+.advice-replies-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.advice-reply-list {
+  display: grid;
+  gap: 10px;
+}
+
+.advice-reply-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 16px;
+}
+
+.advice-reply-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.advice-reply-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 .composer input,

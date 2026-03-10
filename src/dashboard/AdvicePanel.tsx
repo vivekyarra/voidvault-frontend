@@ -7,6 +7,7 @@ import type {
   CurrentUser,
 } from "./types";
 import { formatRelativeTime } from "../utils/time";
+import { ChevronRightIcon } from "./icons";
 
 interface ReplyDraftMap {
   [adviceId: string]: string;
@@ -140,61 +141,69 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
   }
 
   return (
-    <section className="dashboard-panel">
-      <header className="panel-header">
-        <h2>Advice</h2>
-        <div className="tab-toggle">
+    <section className="page-section advice-page">
+      <div className="advice-toolbar">
+        <div className="advice-toolbar-actions">
           <button
-            className={mode === "need" ? "active" : ""}
+            className={mode === "need" ? "btn-primary" : "btn-secondary"}
             type="button"
             onClick={() => setMode("need")}
           >
             Need Advice
           </button>
           <button
-            className={mode === "give" ? "active" : ""}
+            className={mode === "give" ? "btn-primary" : "btn-secondary"}
             type="button"
             onClick={() => setMode("give")}
           >
             Give Advice
           </button>
         </div>
-      </header>
+      </div>
 
       {mode === "need" ? (
-        <form className="composer" onSubmit={handleAskAdvice}>
+        <form className="advice-compose" onSubmit={handleAskAdvice}>
           <textarea
+            className="field-input advice-textarea"
             maxLength={800}
-            placeholder="Ask for advice anonymously..."
+            placeholder="Ask anonymously. No one knows it's you."
             required
             rows={4}
             value={questionDraft}
             onChange={(event) => setQuestionDraft(event.target.value)}
           />
-          <button type="submit">Post Advice Request</button>
+          <button className="btn-primary advice-submit" type="submit">
+            Post anonymously
+          </button>
         </form>
       ) : null}
 
-      {status ? <p className="panel-status">{status}</p> : null}
+      {status ? <p className="ui-status">{status}</p> : null}
       {isLoading ? <p className="empty-state">Loading advice...</p> : null}
 
       {!isLoading && adviceItems.length === 0 ? (
-        <p className="empty-state">No advice requests yet.</p>
+        <div className="ui-empty">
+          <h2 className="ui-display">NO ADVICE YET.</h2>
+          <p>Anonymous questions will show up here once they are posted.</p>
+        </div>
       ) : null}
 
-      <div className="card-list">
+      <div className="advice-list">
         {adviceItems.map((advice) => (
-          <article className="content-card" key={advice.id}>
-            <header>
-              <strong>Anonymous</strong>
-              <span>{advice.reply_count} replies</span>
-              <time dateTime={advice.created_at}>{formatRelativeTime(advice.created_at)}</time>
+          <article className="advice-card" key={advice.id}>
+            <header className="advice-card-header">
+              <span className="advice-anon-pill">Anonymous</span>
+              <span className="advice-reply-count">{advice.reply_count} replies</span>
+              <time className="advice-time" dateTime={advice.created_at}>
+                {formatRelativeTime(advice.created_at)}
+              </time>
             </header>
-            <p>{advice.content}</p>
+            <p className="advice-content">{advice.content}</p>
 
             {mode === "give" ? (
-              <div className="composer">
+              <div className="advice-reply-composer">
                 <textarea
+                  className="field-input advice-reply-textarea"
                   maxLength={800}
                   placeholder="Share helpful advice..."
                   rows={3}
@@ -206,27 +215,28 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
                     }))
                   }
                 />
-                <button type="button" onClick={() => void handleReply(advice.id)}>
+                <button className="btn-secondary advice-reply-submit" type="button" onClick={() => void handleReply(advice.id)}>
                   Reply
                 </button>
               </div>
             ) : null}
 
-            <footer>
-              <button type="button" onClick={() => toggleReplies(advice.id)}>
+            <footer className="advice-card-footer">
+              <button className="btn-ghost advice-replies-toggle" type="button" onClick={() => toggleReplies(advice.id)}>
                 {openRepliesByAdvice[advice.id] ? "Hide replies" : "View replies"}
+                <ChevronRightIcon />
               </button>
             </footer>
 
             {openRepliesByAdvice[advice.id] && (repliesByAdvice[advice.id] ?? []).length > 0 ? (
-              <div className="card-list">
+              <div className="advice-reply-list">
                 {(repliesByAdvice[advice.id] ?? []).map((reply) => (
-                  <article className="content-card" key={reply.id}>
-                    <header>
+                  <article className="advice-reply-card" key={reply.id}>
+                    <header className="advice-reply-header">
                       <strong>
                         {reply.user_id === currentUser.id ? "You" : `@${reply.username}`}
                       </strong>
-                      <time dateTime={reply.created_at}>
+                      <time className="advice-time" dateTime={reply.created_at}>
                         {formatRelativeTime(reply.created_at)}
                       </time>
                     </header>
@@ -244,7 +254,7 @@ export function AdvicePanel({ currentUser }: { currentUser: CurrentUser }) {
       </div>
 
       {nextCursor ? (
-        <button className="secondary-btn" type="button" onClick={() => void loadAdvice(nextCursor, true)}>
+        <button className="btn-secondary advice-load-more" type="button" onClick={() => void loadAdvice(nextCursor, true)}>
           Load more
         </button>
       ) : null}
