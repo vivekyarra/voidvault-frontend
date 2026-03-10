@@ -1,38 +1,52 @@
 # VoidVault Frontend
 
-Production React frontend for VoidVault, deployed on Cloudflare Pages.
+Production React frontend. Deployed at [voidvault.pages.dev](https://voidvault.pages.dev).
 
 ## Stack
+
 - React 19 + TypeScript
 - Vite
-- Cookie-based API session model (`credentials: include`)
+- Cookie-based API session (`credentials: include`)
+- Cloudflare Pages
 
 ## Architecture
-Browser -> Frontend (Pages) -> Drift Backend (Workers) -> Supabase + Cloudinary
 
-Frontend does not use Supabase auth directly.
+Browser -> Cloudflare Pages -> Cloudflare Worker API -> Supabase + Cloudinary
+
+The frontend never touches Supabase directly. All auth and data goes through the backend Worker.
 
 ## Features
-- Signup/login with username + password flow
-- Auto-generate username helper on signup
-- Mobile-first dashboard UI
-- Trending/following feed
-- Search, follow, notifications, chat, profile, advice
-- Post sharing: native device share + in-app share to other VoidVault users
-- Report modal with optional reason field
-- Chat user search directly from chat screen
-- Post composer with media URL pipeline support
-- Profile editing + password change
-- Theme toggle and auth/session guard behavior
-- Admin route at `/admin` with moderation + user personal-details view
+
+- Username + password signup - no email, no phone, no personal data
+- Feed (Trending / Following tabs)
+- Search (users and posts)
+- Real-time notifications
+- Anonymous Advice board
+- Direct messaging (Chat)
+- User profiles with editable bio and avatar initial
+- Follow / Discover People
+- Post composer with media support (via Cloudinary URL pipeline)
+- Theme toggle (dark/light)
+- Admin panel at `/admin` (requires admin credentials)
+
+## Auth
+
+Accounts are created with a username and password only.
+Sessions are cookie-based and managed entirely by the backend.
+**There is no email-based password reset.** If you lose your password, you will need to create a new account. Choose a strong password.
 
 ## Environment
-Create `frontend/.env`:
+
+Create `frontend/.env` (do not commit this file):
+
 ```env
 VITE_API_URL=https://drift-backend.vivekyarra567.workers.dev
 ```
 
+See `.env.example` for the full list of required variables.
+
 ## Local Development
+
 ```bash
 cd frontend
 npm install
@@ -40,26 +54,16 @@ npm run dev
 ```
 
 ## Validation
+
 ```bash
 npm run lint
+npm run typecheck
 npm run build
 ```
 
-## Deploy to Cloudflare Pages
+## Deploy
+
 ```bash
-cd frontend
 npm run build
-npx wrangler pages deploy dist --project-name voidvault --branch main --commit-dirty=true
+npx wrangler pages deploy dist --project-name voidvault --branch main
 ```
-
-Production domain:
-- `https://voidvault.pages.dev`
-
-## Important Integration Notes
-- API calls use `credentials: include`
-- CSRF header is attached from cookie for mutating requests
-- Session token fallback is handled for cross-browser compatibility
-- Admin personal-details view depends on backend migration `009_phase8_user_request_audit_logs.sql`
-
-## Repository
-- GitHub: https://github.com/vivekyarra/voidvault-frontend

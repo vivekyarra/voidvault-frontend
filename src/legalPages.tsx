@@ -61,7 +61,7 @@ export function TermsPage({ onNavigateHome }: LegalPageProps) {
         <>
           <p>VoidVault is an anonymous social platform that allows users to:</p>
           <ul>
-            <li>Create accounts using a username and recovery key</li>
+            <li>Create accounts using a username and password</li>
             <li>Post content and images</li>
             <li>Follow other users</li>
             <li>Send and receive messages</li>
@@ -94,10 +94,13 @@ export function TermsPage({ onNavigateHome }: LegalPageProps) {
         <>
           <p>You are responsible for:</p>
           <ul>
-            <li>Keeping your recovery key secure</li>
+            <li>Keeping your password secure</li>
             <li>All activity performed under your account</li>
           </ul>
-          <p>VoidVault cannot recover accounts if you lose your recovery key.</p>
+          <p>
+            VoidVault cannot recover accounts if you lose your password. You will
+            need to create a new account.
+          </p>
         </>
       ),
     },
@@ -211,7 +214,7 @@ export function PrivacyPage({ onNavigateHome }: LegalPageProps) {
           <h3>a) Account Information</h3>
           <ul>
             <li>Username</li>
-            <li>Recovery key hash (never stored in plain text)</li>
+            <li>Password hash (never stored in plain text)</li>
           </ul>
           <p>We do not collect:</p>
           <ul>
@@ -297,8 +300,8 @@ export function PrivacyPage({ onNavigateHome }: LegalPageProps) {
       title: "7. Security",
       body: (
         <p>
-          We implement hashed session tokens, hashed recovery keys, rate limiting,
-          and secure HTTPS connections. However, no system is 100 percent secure.
+          We implement hashed session tokens, password hashing, rate limiting, and
+          secure HTTPS connections. However, no system is 100 percent secure.
         </p>
       ),
     },

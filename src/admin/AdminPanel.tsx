@@ -633,12 +633,8 @@ export function AdminPanel({
       <main className="admin-page">
         <section className="admin-lock-card">
           <div className="admin-brand">
-            <div aria-hidden="true" className="admin-triple-logo">
-              <span>V</span>
-              <span className="admin-v-up">V</span>
-              <span>V</span>
-            </div>
-            <h1>Vivek&apos;s VoidVault</h1>
+            <img alt="VoidVault" className="admin-brand-mark" src="/voidvault-logo.svg" />
+            <h1>VOIDVAULT ADMIN</h1>
           </div>
           <p>Enter admin password to continue.</p>
           <form className="admin-lock-form" onSubmit={handleUnlock}>
@@ -664,13 +660,9 @@ export function AdminPanel({
     <main className="admin-page">
       <header className="admin-topbar">
         <div className="admin-brand admin-brand-inline">
-          <div aria-hidden="true" className="admin-triple-logo">
-            <span>V</span>
-            <span className="admin-v-up">V</span>
-            <span>V</span>
-          </div>
+          <img alt="VoidVault" className="admin-brand-mark" src="/voidvault-logo.svg" />
           <div>
-            <h1>Vivek&apos;s VoidVault</h1>
+            <h1>VOIDVAULT ADMIN</h1>
             <p>Full moderation and platform controls.</p>
           </div>
         </div>
@@ -854,7 +846,6 @@ export function AdminPanel({
                           <div className="admin-muted">
                             Password hash: {user.password_hash ?? "not-set"}
                           </div>
-                          <div className="admin-muted">Recovery hash: {user.recovery_key_hash}</div>
                         </td>
                         <td>{user.trust_score}</td>
                         <td>

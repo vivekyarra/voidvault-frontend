@@ -1,7 +1,7 @@
 .admin-page {
   min-height: 100vh;
-  background: #030303;
-  color: #edf1f5;
+  background: var(--bg-void);
+  color: var(--text-primary);
   padding: 1rem;
   display: grid;
   align-content: start;
@@ -11,10 +11,10 @@
 .admin-lock-card {
   width: min(460px, 100%);
   margin: 14vh auto 0;
-  background: #0a0a0a;
-  border: 1px solid #2a2a2a;
-  border-radius: 14px;
-  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-xl);
+  padding: 1.25rem;
   display: grid;
   gap: 0.6rem;
 }
@@ -22,7 +22,10 @@
 .admin-lock-card h1,
 .admin-topbar h1 {
   margin: 0;
+  font-family: "Bebas Neue", sans-serif;
   font-size: clamp(1.7rem, 4vw, 2.2rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
 }
 
 .admin-brand {
@@ -37,26 +40,17 @@
   gap: 0.85rem;
 }
 
-.admin-triple-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.22rem;
-  font-family: "Sora", "Source Sans 3", sans-serif;
-  font-size: 2rem;
-  line-height: 0.82;
-  letter-spacing: -0.12em;
-  color: #f3f5f8;
-}
-
-.admin-v-up {
-  transform: rotate(180deg);
+.admin-brand-mark {
+  width: 44px;
+  height: 44px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .admin-lock-card p,
 .admin-topbar p {
   margin: 0;
-  color: #9ca7b1;
+  color: var(--text-secondary);
 }
 
 .admin-lock-form {
@@ -72,32 +66,33 @@
 
 .admin-page input,
 .admin-page select {
-  border-radius: 12px;
-  border: 1px solid #303438;
-  background: #000;
-  color: #edf1f5;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-input);
+  color: var(--text-primary);
   padding: 0.62rem 0.74rem;
 }
 
 .admin-page button {
-  border: 1px solid #2e3a49;
-  border-radius: 999px;
-  background: #131c28;
-  color: #e8eef4;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-md);
+  background: var(--bg-card-2);
+  color: var(--text-primary);
   padding: 0.46rem 0.78rem;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .admin-page button.ghost {
-  background: #111;
-  border-color: #2a2a2a;
+  background: transparent;
+  border-color: var(--border-default);
+  color: var(--text-secondary);
 }
 
 .admin-page button.danger {
-  background: #391319;
-  border-color: #7a2b35;
-  color: #f5ccd2;
+  background: var(--danger-dim);
+  border-color: var(--danger-border);
+  color: var(--danger);
 }
 
 .admin-page button:disabled {
@@ -107,23 +102,19 @@
 
 .admin-status {
   margin: 0;
-  color: #8ecaff;
+  color: var(--text-secondary);
 }
 
 .admin-topbar {
-  border: 1px solid #2a2a2a;
-  border-radius: 14px;
-  background: #080808;
+  border: 1px solid var(--border-default);
+  border-radius: var(--r-xl);
+  background: var(--bg-card);
   padding: 0.85rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.8rem;
   flex-wrap: wrap;
-}
-
-.admin-topbar .admin-triple-logo {
-  font-size: 1.55rem;
 }
 
 .admin-topbar-actions {
@@ -152,9 +143,9 @@
 }
 
 .admin-platform-card {
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  background: #080808;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
   padding: 0.7rem;
   display: grid;
   gap: 0.45rem;
@@ -176,15 +167,15 @@
 }
 
 .admin-tabs button.active {
-  background: #eceff3;
-  border-color: #eceff3;
-  color: #101419;
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-void);
 }
 
 .admin-stat-card {
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  background: #080808;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
   padding: 0.7rem;
   min-height: 92px;
 }
@@ -196,7 +187,7 @@
 .admin-stat-card h3 {
   margin: 0;
   font-size: 0.88rem;
-  color: #a8b0b8;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -208,9 +199,9 @@
 }
 
 .admin-section {
-  border: 1px solid #2a2a2a;
-  border-radius: 14px;
-  background: #080808;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl);
+  background: var(--bg-card);
   padding: 0.8rem;
   display: grid;
   gap: 0.65rem;
@@ -250,14 +241,14 @@
 
 .admin-table th,
 .admin-table td {
-  border-top: 1px solid #1f1f1f;
+  border-top: 1px solid var(--border-subtle);
   padding: 0.55rem;
   text-align: left;
   vertical-align: top;
 }
 
 .admin-table th {
-  color: #9ca6b0;
+  color: var(--text-secondary);
   font-size: 0.86rem;
   letter-spacing: 0.01em;
 }
@@ -269,7 +260,7 @@
 }
 
 .admin-muted {
-  color: #84909c;
+  color: var(--text-muted);
   font-size: 0.8rem;
   margin-top: 0.22rem;
   overflow-wrap: anywhere;
@@ -283,10 +274,10 @@
 
 .admin-details-card {
   margin-top: 0.8rem;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
   padding: 0.75rem;
-  background: #060606;
+  background: var(--bg-card);
   display: grid;
   gap: 0.75rem;
 }
@@ -312,10 +303,10 @@
 
 .admin-details-grid section,
 .admin-details-logs {
-  border: 1px solid #1f1f1f;
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
   padding: 0.6rem;
-  background: #040404;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .admin-mini-list {
@@ -331,7 +322,7 @@
 }
 
 .admin-mini-list li span {
-  color: #9ca6b0;
+  color: var(--text-secondary);
   font-size: 0.84rem;
   overflow-wrap: anywhere;
 }
@@ -380,8 +371,8 @@
     align-items: flex-start;
   }
 
-  .admin-topbar .admin-triple-logo {
-    font-size: 1.35rem;
-    margin-top: 0.15rem;
+  .admin-brand-mark {
+    width: 40px;
+    height: 40px;
   }
 }
