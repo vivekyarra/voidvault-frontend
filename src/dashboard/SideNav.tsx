@@ -6,7 +6,6 @@ import {
   ChatIcon,
   FollowIcon,
   HomeIcon,
-  PlusIcon,
   ProfileIcon,
   SearchIcon,
 } from "./icons";
@@ -23,62 +22,63 @@ const NAV_ITEMS: Array<{
   { id: "notifications", label: "Notifications", icon: <BellIcon /> },
   { id: "advice", label: "Advice", icon: <AdviceIcon /> },
   { id: "chat", label: "Chat", icon: <ChatIcon /> },
-  { id: "follow", label: "Follow", icon: <FollowIcon />, desktopOnly: true },
-  { id: "profile", label: "Profile", icon: <ProfileIcon />, desktopOnly: true },
+  { id: "follow", label: "Follow", icon: <FollowIcon /> },
+  { id: "profile", label: "Profile", icon: <ProfileIcon /> },
 ];
 
 export function SideNav({
   activeTab,
   onSelectTab,
   onOpenComposer,
-  showPostAction,
+  showNotificationDot = false,
 }: {
   activeTab: DashboardTab;
   onSelectTab: (tab: DashboardTab) => void;
   onOpenComposer: () => void;
-  showPostAction: boolean;
+  showNotificationDot?: boolean;
 }) {
   return (
     <aside className="dashboard-sidebar">
       <button
-        className="dashboard-logo logo-btn"
+        className="dashboard-brand"
         type="button"
         onClick={() => onSelectTab("home")}
       >
-        <span>V</span>
-        <span className="dashboard-logo-up">V</span>
+        <img
+          alt="VoidVault"
+          className="dashboard-brand-mark"
+          src="/voidvault-logo.svg"
+        />
+        <span className="dashboard-brand-wordmark">VOIDVAULT</span>
       </button>
       <nav className="dashboard-nav">
         {NAV_ITEMS.map((item) => (
           <button
             key={item.id}
-            className={`dashboard-nav-item ${activeTab === item.id ? "active" : ""} ${
-              item.mobileOnly ? "mobile-only" : ""
-            } ${item.desktopOnly ? "desktop-only" : ""}`.trim()}
+            className={`dashboard-nav-item ${activeTab === item.id ? "active" : ""}`.trim()}
             type="button"
             onClick={() => onSelectTab(item.id)}
           >
-            <span className="dashboard-nav-icon" aria-hidden="true">
+            <span
+              className={`dashboard-nav-icon ${
+                item.id === "notifications" && showNotificationDot
+                  ? "has-notification-dot"
+                  : ""
+              }`}
+              aria-hidden="true"
+            >
               {item.icon}
+              {item.id === "notifications" && showNotificationDot ? (
+                <span className="dashboard-nav-dot" />
+              ) : null}
             </span>
             <span>{item.label}</span>
           </button>
         ))}
       </nav>
-      {showPostAction ? (
-        <div className="dashboard-sidebar-actions">
-          <button
-            className="dashboard-nav-item active-action"
-            type="button"
-            onClick={onOpenComposer}
-          >
-            <span className="dashboard-nav-icon" aria-hidden="true">
-              <PlusIcon />
-            </span>
-            <span>Post</span>
-          </button>
-        </div>
-      ) : null}
+      <button className="btn-primary dashboard-post-btn" type="button" onClick={onOpenComposer}>
+        + Post
+      </button>
     </aside>
   );
 }

@@ -108,7 +108,6 @@ export function Dashboard({
         activeTab={activeTab}
         onOpenComposer={() => setIsComposerOpen(true)}
         onSelectTab={setActiveTab}
-        showPostAction={activeTab === "home"}
       />
 
       <section className="dashboard-main">
