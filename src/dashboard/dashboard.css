@@ -263,6 +263,12 @@
   margin: 0 auto;
 }
 
+.search-page,
+.follow-page {
+  width: min(100%, 880px);
+  margin: 0 auto;
+}
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -359,6 +365,110 @@
 .search-form {
   display: grid;
   gap: 0.55rem;
+}
+
+.search-bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.search-submit {
+  min-width: 112px;
+}
+
+.results-section {
+  display: grid;
+  gap: 12px;
+}
+
+.results-title {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+}
+
+.user-card-list {
+  display: grid;
+  gap: 8px;
+}
+
+.user-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-lg);
+  background: var(--bg-card);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: border-color 0.15s ease;
+}
+
+.user-card:hover {
+  border-color: var(--border-default);
+}
+
+.user-card-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-card-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--bg-card-2);
+  display: grid;
+  place-items: center;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-card-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.user-card-username {
+  width: fit-content;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.user-card-meta {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 300;
+}
+
+.user-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.user-card-follow,
+.user-card-chat {
+  min-height: 36px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 0.82rem;
 }
 
 .composer input,
@@ -1160,6 +1270,29 @@
   .mobile-theme-btn {
     width: 32px;
     height: 32px;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-submit {
+    width: 100%;
+  }
+
+  .user-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-card-actions {
+    width: 100%;
+  }
+
+  .user-card-follow,
+  .user-card-chat {
+    flex: 1;
   }
 }
 

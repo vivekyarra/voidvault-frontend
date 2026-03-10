@@ -56,53 +56,67 @@ export function SearchPanel({
   }
 
   return (
-    <section className="dashboard-panel">
-      <form className="search-form" onSubmit={handleSubmit}>
+    <section className="page-section search-page">
+      <form className="search-bar" onSubmit={handleSubmit}>
         <input
-          placeholder="Search users and posts"
+          className="field-input"
+          placeholder="Search users and posts..."
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
-        <button type="submit">Search</button>
+        <button className="btn-primary search-submit" type="submit">
+          Search
+        </button>
       </form>
 
-      {status ? <p className="panel-status">{status}</p> : null}
+      {status ? <p className="ui-status">{status}</p> : null}
       {isLoading ? <p className="empty-state">Searching...</p> : null}
 
       {!isLoading && result ? (
         <>
-          <h3>Users</h3>
+          <div className="results-section">
+            <h2 className="results-title">Users</h2>
           {result.users.length === 0 ? <p className="empty-state">No users found.</p> : null}
-          <div className="card-list">
+          <div className="user-card-list">
             {result.users.map((user) => (
-              <article className="content-card" key={user.id}>
-                <header>
+              <article className="user-card" key={user.id}>
+                <div className="user-card-main">
+                  <div className="user-card-avatar" aria-hidden="true">
+                    {user.username.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="user-card-copy">
+                    <button
+                      className="user-card-username"
+                      type="button"
+                      onClick={() => onOpenProfile(user.id)}
+                    >
+                      @{user.username}
+                    </button>
+                    <time className="user-card-meta" dateTime={user.created_at}>
+                      Joined {formatMonthDay(user.created_at)}
+                    </time>
+                  </div>
+                </div>
+                <div className="user-card-actions">
                   <button
-                    className="inline-link"
-                    type="button"
-                    onClick={() => onOpenProfile(user.id)}
-                  >
-                    @{user.username}
-                  </button>
-                  <time dateTime={user.created_at}>{formatMonthDay(user.created_at)}</time>
-                </header>
-                <footer>
-                  <button
+                    className="btn-secondary user-card-follow"
                     type="button"
                     onClick={() => void handleFollowAction(user.id, user.is_following)}
                   >
-                    {user.is_following ? "Unfollow" : "Follow"}
+                    {user.is_following ? "Following" : "Follow"}
                   </button>
-                  <button type="button" onClick={() => onOpenChat(user.id)}>
+                  <button className="btn-ghost user-card-chat" type="button" onClick={() => onOpenChat(user.id)}>
                     Chat
                   </button>
-                </footer>
+                </div>
               </article>
             ))}
           </div>
+          </div>
 
-          <h3>Posts</h3>
+          <div className="results-section">
+            <h2 className="results-title">Posts</h2>
           {result.posts.length === 0 ? <p className="empty-state">No matching posts.</p> : null}
           <div className="card-list">
             {result.posts.map((post) => (
@@ -117,6 +131,7 @@ export function SearchPanel({
                 videoUrl={post.video_url}
               />
             ))}
+          </div>
           </div>
         </>
       ) : null}
