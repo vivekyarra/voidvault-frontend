@@ -1,68 +1,46 @@
 # VoidVault Frontend
 
-Production React frontend. Deployed at [voidvault.pages.dev](https://voidvault.pages.dev).
+Production React frontend. Live at [voidvault.pages.dev](https://voidvault.pages.dev).
 
 ## Stack
-
-- React 19 + TypeScript
-- Vite
-- Cookie-based API session (`credentials: include`)
+- React 19 + TypeScript + Vite
+- Cookie-based sessions (`credentials: include`)
 - Cloudflare Pages
 
 ## Architecture
+Browser -> Cloudflare Pages -> Worker API -> Supabase + Cloudinary
 
-Browser -> Cloudflare Pages -> Cloudflare Worker API -> Supabase + Cloudinary
-
-The frontend never touches Supabase directly. All auth and data goes through the backend Worker.
+Frontend never touches Supabase directly.
 
 ## Features
-
 - Username + password signup - no email, no phone, no personal data
-- Feed (Trending / Following tabs)
-- Search (users and posts)
-- Real-time notifications
+- Feed with Trending / Following tabs
+- Search users and posts
+- Notifications
 - Anonymous Advice board
 - Direct messaging (Chat)
-- User profiles with editable bio and avatar initial
+- User profiles
 - Follow / Discover People
-- Post composer with media support (via Cloudinary URL pipeline)
-- Theme toggle (dark/light)
-- Admin panel at `/admin` (requires admin credentials)
+- Post composer with media support
+- Theme toggle
+- Admin panel at `/admin`
 
 ## Auth
-
-Accounts are created with a username and password only.
-Sessions are cookie-based and managed entirely by the backend.
-**There is no email-based password reset.** If you lose your password, you will need to create a new account. Choose a strong password.
+Username + password only. No email. No OAuth.
+**No password reset** - if you lose your password, create a new account.
 
 ## Environment
-
-Create `frontend/.env` (do not commit this file):
-
+Create `.env` (never commit this):
 ```env
 VITE_API_URL=https://drift-backend.vivekyarra567.workers.dev
 ```
 
-See `.env.example` for the full list of required variables.
-
-## Local Development
-
+## Dev
 ```bash
-cd frontend
-npm install
-npm run dev
+npm install && npm run dev
 ```
 
-## Validation
-
-```bash
-npm run lint
-npm run typecheck
-npm run build
-```
-
-## Deploy
-
+## Build & Deploy
 ```bash
 npm run build
 npx wrangler pages deploy dist --project-name voidvault --branch main
