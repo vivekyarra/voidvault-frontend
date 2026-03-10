@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { requestJson } from "../api";
 import type { FollowDataResponse } from "./types";
 import { formatMonthDay } from "../utils/time";
+import { RefreshIcon } from "./icons";
 import { sendFollow, sendUnfollow } from "./shared";
 
 export function FollowPanel({
@@ -48,74 +49,98 @@ export function FollowPanel({
   }
 
   return (
-    <section className="dashboard-panel">
-      <header className="panel-header">
-        <h2>Follow</h2>
-        <button className="secondary-btn" type="button" onClick={() => void loadData()}>
-          Refresh
+    <section className="page-section follow-page">
+      <div className="page-toolbar">
+        <button
+          aria-label="Refresh people"
+          className="icon-only-btn"
+          type="button"
+          onClick={() => void loadData()}
+        >
+          <RefreshIcon />
         </button>
-      </header>
+      </div>
 
-      {status ? <p className="panel-status">{status}</p> : null}
+      {status ? <p className="ui-status">{status}</p> : null}
       {isLoading ? <p className="empty-state">Loading follow data...</p> : null}
 
       {!isLoading && data ? (
         <>
-          <h3>Who to follow</h3>
+          <div className="results-section">
+          <h2 className="results-title">Suggestions</h2>
           {data.suggestions.length === 0 ? (
-            <p className="empty-state">No suggestions available.</p>
+            <div className="ui-empty">
+              <h2 className="ui-display">ALL CAUGHT UP</h2>
+              <p>You&apos;re following everyone available right now.</p>
+            </div>
           ) : null}
-          <div className="card-list">
+          <div className="user-card-list">
             {data.suggestions.map((user) => (
-              <article className="content-card" key={user.id}>
-                <header>
-                  <button
-                    className="inline-link"
-                    type="button"
-                    onClick={() => onOpenProfile(user.id)}
-                  >
-                    @{user.username}
-                  </button>
-                </header>
-                <footer>
-                  <button type="button" onClick={() => void handleFollow(user.id, false)}>
+              <article className="user-card" key={user.id}>
+                <div className="user-card-main">
+                  <div className="user-card-avatar" aria-hidden="true">
+                    {user.username.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="user-card-copy">
+                    <button
+                      className="user-card-username"
+                      type="button"
+                      onClick={() => onOpenProfile(user.id)}
+                    >
+                      @{user.username}
+                    </button>
+                    <span className="user-card-meta">Suggested for you</span>
+                  </div>
+                </div>
+                <div className="user-card-actions">
+                  <button className="btn-secondary user-card-follow" type="button" onClick={() => void handleFollow(user.id, false)}>
                     Follow
                   </button>
-                  <button type="button" onClick={() => onOpenChat(user.id)}>
+                  <button className="btn-ghost user-card-chat" type="button" onClick={() => onOpenChat(user.id)}>
                     Chat
                   </button>
-                </footer>
+                </div>
               </article>
             ))}
           </div>
+          </div>
 
-          <h3>Following</h3>
+          <div className="results-section">
+          <h2 className="results-title">Following</h2>
           {data.following.length === 0 ? (
             <p className="empty-state">You are not following anyone yet.</p>
           ) : null}
-          <div className="card-list">
+          <div className="user-card-list">
             {data.following.map((user) => (
-              <article className="content-card" key={user.id}>
-                <header>
-                  <button
-                    className="inline-link"
-                    type="button"
-                    onClick={() => onOpenProfile(user.id)}
-                  >
-                    @{user.username}
-                  </button>
-                  <time dateTime={user.followed_at}>{formatMonthDay(user.followed_at)}</time>
-                </header>
-                <footer>
-                  <button type="button" onClick={() => void handleFollow(user.id, true)}>
+              <article className="user-card" key={user.id}>
+                <div className="user-card-main">
+                  <div className="user-card-avatar" aria-hidden="true">
+                    {user.username.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="user-card-copy">
+                    <button
+                      className="user-card-username"
+                      type="button"
+                      onClick={() => onOpenProfile(user.id)}
+                    >
+                      @{user.username}
+                    </button>
+                    <time className="user-card-meta" dateTime={user.followed_at}>
+                      Following since {formatMonthDay(user.followed_at)}
+                    </time>
+                  </div>
+                </div>
+                <div className="user-card-actions">
+                  <button className="btn-secondary user-card-follow" type="button" onClick={() => void handleFollow(user.id, true)}>
                     Unfollow
                   </button>
-                  <button type="button" onClick={() => onOpenChat(user.id)}>
+                  <button className="btn-ghost user-card-chat" type="button" onClick={() => onOpenChat(user.id)}>
                     Chat
                   </button>
-                </footer>
+                </div>
               </article>
             ))}
+          </div>
           </div>
         </>
       ) : null}
