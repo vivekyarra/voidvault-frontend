@@ -107,6 +107,23 @@ export function RefreshIcon(props: IconProps) {
   );
 }
 
+export function HeartIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10Z" />
+    </IconBase>
+  );
+}
+
+export function ReplyIcon(props: IconProps) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 17 4 12l5-5" />
+      <path d="M4 12h9a7 7 0 0 1 7 7" />
+    </IconBase>
+  );
+}
+
 export function ThumbUpIcon(props: IconProps) {
   return (
     <IconBase {...props}>
