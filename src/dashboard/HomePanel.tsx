@@ -402,9 +402,8 @@ export function HomePanel({
   }, [posts, highlightedPost]);
 
   return (
-    <section className="dashboard-panel">
-      <header className="feed-header">
-        <div className="feed-tab-toggle">
+    <section className="page-section feed-page">
+      <div className="feed-tab-toggle" role="tablist" aria-label="Feed filter">
           <button
             className={`feed-tab ${!followingOnly ? "active" : ""}`}
             type="button"
@@ -419,14 +418,16 @@ export function HomePanel({
           >
             Following
           </button>
-        </div>
-      </header>
+      </div>
 
-      {status ? <p className="panel-status">{status}</p> : null}
-      {isLoading ? <p className="empty-state">Loading feed...</p> : null}
+      {status ? <p className="ui-status">{status}</p> : null}
+      {isLoading ? <p className="empty-state feed-empty-state">Loading feed...</p> : null}
 
       {!isLoading && combinedPosts.length === 0 ? (
-        <p className="empty-state">No content uploaded yet.</p>
+        <div className="ui-empty">
+          <h2 className="ui-display">NO POSTS YET.</h2>
+          <p>Your feed will populate once people start posting.</p>
+        </div>
       ) : null}
 
       <div className="card-list">
@@ -570,7 +571,7 @@ export function HomePanel({
 
       {nextCursor ? (
         <button
-          className="secondary-btn"
+          className="btn-secondary feed-load-more"
           disabled={isLoadingMore}
           type="button"
           onClick={() => {
@@ -589,15 +590,19 @@ export function HomePanel({
       {shareTargetPost ? (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
           <section className="modal-card share-user-modal">
-            <header className="panel-header">
-              <h3>Share to VoidVault user</h3>
-              <button className="secondary-btn" type="button" onClick={closeShareModal}>
+            <header className="modal-header">
+              <div className="modal-copy">
+                <p className="ui-kicker">Share</p>
+                <h3 className="ui-display">SEND TO CHAT.</h3>
+              </div>
+              <button className="btn-ghost" type="button" onClick={closeShareModal}>
                 Close
               </button>
             </header>
             <div className="search-form">
               <input
                 autoFocus
+                className="field-input"
                 placeholder="Search username"
                 value={shareUserQuery}
                 onChange={(event) => setShareUserQuery(event.target.value)}
@@ -614,7 +619,7 @@ export function HomePanel({
                     <strong>@{user.username}</strong>
                   </div>
                   <button
-                    className="secondary-btn"
+                    className="btn-secondary"
                     disabled={isSendingShare}
                     type="button"
                     onClick={() => void handleShareToUser(user.id)}
@@ -631,15 +636,19 @@ export function HomePanel({
       {reportTargetPostId ? (
         <div className="modal-backdrop" role="dialog" aria-modal="true">
           <section className="modal-card report-modal">
-            <header className="panel-header">
-              <h3>Report post</h3>
-              <button className="secondary-btn" type="button" onClick={closeReportModal}>
+            <header className="modal-header">
+              <div className="modal-copy">
+                <p className="ui-kicker">Safety</p>
+                <h3 className="ui-display">REPORT POST.</h3>
+              </div>
+              <button className="btn-ghost" type="button" onClick={closeReportModal}>
                 Close
               </button>
             </header>
             <label className="composer">
               <span>Reason (optional)</span>
               <textarea
+                className="field-input modal-textarea"
                 maxLength={500}
                 placeholder="Add reason for report (optional)"
                 rows={4}
@@ -648,7 +657,7 @@ export function HomePanel({
               />
             </label>
             <button
-              className="secondary-btn"
+              className="btn-secondary"
               disabled={isSubmittingReport}
               type="button"
               onClick={() => void handleSubmitReport()}
